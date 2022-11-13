@@ -17,6 +17,9 @@ require_once './db/AccesoDatos.php';
 require_once './middlewares/Logger.php';
 
 require_once './controllers/UsuarioController.php';
+require_once './controllers/ProductoController.php';
+require_once './controllers/MesaController.php';
+require_once './controllers/PedidoController.php';
 
 // Load ENV
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -37,21 +40,32 @@ $app->addBodyParsingMiddleware();
 ❖ Dar de alta y listar mesas
 ❖ Dar de alta y listar pedidos
  */
-//Users
+
+//Usuarios
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
   $group->get('[/]', \UsuarioController::class . ':TraerTodos');
-  $group->post('/login', \UsuarioController::class . ':Login');
+  $group->post('/login', \UsuarioController::class . ':CargarUno');
 });
 
+//Productos
+$app->group('/productos', function (RouteCollectorProxy $group) {
+  $group->get('[/]', \ProductoController::class . ':TraerTodos');
+  $group->post('/', \ProductoController::class . ':CargarProducto');
+});
 
-// Routes
-$app->group('/usuarios', function (RouteCollectorProxy $group) {
-    $group->get('[/]', \UsuarioController::class . ':TraerTodos');
-    $group->get('/{usuario}', \UsuarioController::class . ':TraerUno');
-    $group->post('[/]', \UsuarioController::class . ':CargarUno');
-  });
+//Mesas
+$app->group('/mesas', function (RouteCollectorProxy $group) {
+  $group->get('[/]', \MesaController::class . ':TraerTodos');
+  $group->post('/login', \MesaController::class . ':Login');
+});
 
-$app->get('[/]', function (Request $request, Response $response) {    
+//Pedidos
+$app->group('/pedidos', function (RouteCollectorProxy $group) {
+  $group->get('[/]', \PedidoController::class . ':TraerTodos');
+  $group->post('/login', \PedidoController::class . ':Login');
+});
+
+  $app->get('[/]', function (Request $request, Response $response) {    
     $payload = json_encode(array("mensaje" => "Slim Framework 4 PHP"));
     
     // Pausa para probar el middleware (10 segundos)
