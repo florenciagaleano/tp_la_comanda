@@ -15,6 +15,7 @@ class MesaController extends Mesa implements IApiUsable
         $mesa = new Mesa();
         $mesa->estado = $estado;
         $mesa->codigo = $codigo;
+        //var_dump($parametros['codigo']);
         $mesa->crearMesa();
 
         $payload = json_encode(array("mensaje" => "Mesa creado con exito"));

@@ -44,25 +44,25 @@ $app->addBodyParsingMiddleware();
 //Usuarios
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
   $group->get('[/]', \UsuarioController::class . ':TraerTodos');
-  $group->post('/login', \UsuarioController::class . ':CargarUno');
+  $group->post('/crear', \UsuarioController::class . ':CargarUno');
 });
 
 //Productos
 $app->group('/productos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \ProductoController::class . ':TraerTodos');
-  $group->post('/', \ProductoController::class . ':CargarProducto');
+  $group->post('/crear', \ProductoController::class . ':CargarUno');
 });
 
 //Mesas
 $app->group('/mesas', function (RouteCollectorProxy $group) {
   $group->get('[/]', \MesaController::class . ':TraerTodos');
-  $group->post('/login', \MesaController::class . ':Login');
+  $group->post('/crear', \MesaController::class . ':CargarUno');
 });
 
 //Pedidos
 $app->group('/pedidos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \PedidoController::class . ':TraerTodos');
-  $group->post('/login', \PedidoController::class . ':Login');
+  $group->post('/crear', \PedidoController::class . ':CargarUno');
 });
 
   $app->get('[/]', function (Request $request, Response $response) {    
@@ -76,3 +76,6 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) {
 })->add(new LoggerMiddleware());
 
 $app->run();
+
+
+?>

@@ -8,23 +8,28 @@ class PedidoController extends Pedido implements IApiUsable
     {
         $parametros = $request->getParsedBody();
 
-        $Pedido = $parametros['usuario_id'];
-        $clave = $parametros['producto_id'];
+        $usuario_id = $parametros['usuarioId'];
+        $productoId = $parametros['productoId'];
         $estado = "PENDIENTE";
-        $clave = $parametros['mesa_id'];
+        $mesa_id = $parametros['mesaId'];
         $codigo = $parametros['codigo'];
         $tiempo_estimado = $parametros['tiempo_estimado'];
+        $nombre_cliente = $parametros['nombre_cliente'];
 
-        $rol = $parametros['rol'];
-        $sector = $parametros['sector'];
 
         // Creamos el Pedido
-        $usr = new Pedido();
-        $usr->Pedido = $Pedido;
-        $usr->clave = $clave;
-        $usr->crearPedido();
+        $pedido = new Pedido();
+        $pedido->usuario_id = $usuario_id;
+        $pedido->productoId = $productoId;
+        $pedido->estado = $estado;
+        $pedido->mesa_id = $mesa_id;
+        $pedido->codigo = $codigo;
+        $pedido->tiempo_estimado = $tiempo_estimado;
+        $pedido->nombre_cliente = $nombre_cliente;
 
+        $pedido->crearPedido();
         $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
+        
 
         $response->getBody()->write($payload);
         return $response

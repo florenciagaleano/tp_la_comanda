@@ -10,7 +10,7 @@ class Mesa
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO mesa (codigo, estado) VALUES (:codigo, :estado)");
-        $consulta->bindValue(':codigo', $this->usuario, PDO::PARAM_STR);
+        $consulta->bindValue(':codigo', $this->codigo, PDO::PARAM_STR);
         $consulta->bindValue(':estado', $this->estado);
 
         $consulta->execute();
