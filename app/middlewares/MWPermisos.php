@@ -11,6 +11,8 @@ class MWPermisos
     public static function VerificarPedido(Request $request, RequestHandler $handler)
     {
         $jwtHeader = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $jwtHeader)[1]);
+
         $parametros = $request->getParsedBody();
         $pedido_id = $parametros['pedido_id'];
 
@@ -41,11 +43,12 @@ class MWPermisos
 
     public static function VerificarSocio(Request $request, RequestHandler $handler) {
         $jwtHeader = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $jwtHeader)[1]);
+     var_dump(AutentificadorJWT::ObtenerData($token));
         $response = new Response();
 
         try {
             $user = AutentificadorJWT::ObtenerData($jwtHeader);
-
             if (strtoupper($user->rol) == 'SOCIO') {                
                 $response = $handler->handle($request);
                 $response = $response->withStatus( 200 );
@@ -62,6 +65,8 @@ class MWPermisos
 
     public static function VerificarUsuario(Request $request, RequestHandler $handler) {
         $jwtHeader = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $jwtHeader)[1]);
+
         $response = new Response();
 
         try {
@@ -82,7 +87,9 @@ class MWPermisos
     }
 
     public static function VerificarMozoOSocio(Request $request, RequestHandler $handler) {
-        $jwtHeader = $request->getHeaderLine('Authorization');        
+        $jwtHeader = $request->getHeaderLine('Authorization');       
+        $token = trim(explode("Bearer", $jwtHeader)[1]);
+ 
         $response = new Response();
 
         try {
@@ -103,7 +110,9 @@ class MWPermisos
     }
 
     public static function VerificarChefMozoOBartender(Request $request, RequestHandler $handler) {
-        $jwtHeader = $request->getHeaderLine('Authorization');        
+        $jwtHeader = $request->getHeaderLine('Authorization');     
+        $token = trim(explode("Bearer", $jwtHeader)[1]);
+   
         $response = new Response();
 
         try {

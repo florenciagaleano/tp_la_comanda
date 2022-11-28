@@ -94,8 +94,8 @@ class PedidoController extends Pedido implements IApiUsable
     public function AgregarProducto($request, $response, $args)
     {
         $parametros = $request->getParsedBody();
-        $pedido_id = $parametros['pedido_id'];
-        $producto_id = $parametros['producto_id'];
+        $pedido_id = $args['pedidoId'];
+        $producto_id = $args['productoId'];
 
         $pedido = Pedido::obtenerPedidoPorId($pedido_id);
         $product = Producto::obtenerProductoPorId($producto_id);

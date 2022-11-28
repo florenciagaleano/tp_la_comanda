@@ -14,12 +14,13 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 require __DIR__ . '/../vendor/autoload.php';
 
 require_once './db/AccesoDatos.php';
-require_once './middlewares/Logger.php';
 
 require_once './controllers/UsuarioController.php';
 require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
+require_once './middlewares/MWPermisos.php';
+
 
 // Load ENV
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -46,7 +47,7 @@ $app->addBodyParsingMiddleware();
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
     $group->get('[/]', \UsuarioController::class . ':TraerTodos');
     $group->get('/{usuario}', \UsuarioController::class .  ':TraerUno');
-    $group->post('[/]', \UsuarioController::class . ':CargarUno')->add(\MWPermisos::class . ':VerificarSocio');
+    $group->post('/crear', \UsuarioController::class . ':CargarUno')->add(\MWPermisos::class . ':VerificarSocio');
     $group->put('[/{id}]', \UsuarioController::class . ':ModificarUno')->add(\MWPermisos::class . ':VerificarSocio');
     $group->delete('/{id}', \UsuarioController::class . ':BorrarUno')->add(\MWPermisos::class . ':VerificarSocio');
     $group->post('/login', \UsuarioController::class . ':Login');
@@ -78,8 +79,26 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) {
   $group->delete('/{id}', \PedidoController::class . ':BorrarUno');
   $group->post('/{pedidoId}/producto/{productoId}', \PedidoController::class . ':AgregarProducto')->add(\MWPermisos::class . ':VerificarChefMozoOBartender');
   $group->post('/estado/{pedidoId}', \PedidoController::class . ':ModificarEstadoPedido')->add(\MWPermisos::class . ':VerificarChefMozoOBartender');
-  $group->get('[/estado]', \PedidoController::class . ':TraerPorEstado')->add(\MWPermisos::class . ':VerificarUsuario');
+  $group->get('/estado/{estado}', \PedidoController::class . ':TraerPorEstado')->add(\MWPermisos::class . ':VerificarUsuario');
 
+});
+
+$app->group('/jwt', function (RouteCollectorProxy $group) {
+
+  $group->get('/devolverDatos', function (Request $request, Response $response) {
+    $header = $request->getHeaderLine('Authorization');
+    $token = trim(explode("Bearer", $header)[1]);
+
+    try {
+      $payload = json_encode(array('datos' => AutentificadorJWT::ObtenerData($token)));
+    } catch (Exception $e) {
+      $payload = json_encode(array('error' => $e->getMessage()));
+    }
+
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json');
+  });
 });
 
 $app->run();

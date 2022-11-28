@@ -1,6 +1,8 @@
 <?php
 require_once './models/Usuario.php';
 require_once './interfaces/IApiUsable.php';
+require_once './middlewares/AutentificadorJWT.php';
+
 
 class UsuarioController extends Usuario implements IApiUsable
 {
@@ -82,28 +84,27 @@ class UsuarioController extends Usuario implements IApiUsable
 
     public function Login($request, $response, $args) {
       $parametros = $request->getParsedBody();
-      $username =  $parametros['username'];
+      $username =  $parametros['usuario'];
       $clave =  $parametros['clave'];
 
-      if (isset($username) && isset($clave)) {
-        $usuario = Usuario::obtenerUsuario($username);
+      $usuario = Usuario::obtenerUsuario($username);
 
-        if (!empty($usuario) && ($username == $usuario->username) && ($clave == $usuario->clave)) {
+      if (!empty($username) && ($username == $usuario->usuario) && ($clave == $usuario->clave)) {
 
-          $jwt = AutentificadorJWT::CrearToken($usuario);
+        $jwt = AutentificadorJWT::CrearToken($usuario);
 
-          $message = [
-            'Autorizacion' => $jwt,
-            'Status' => 'Login success'
-          ];
+        $message = [
+          'Autorizacion' => $jwt,
+          'Status' => 'Login success'
+        ];
 
-        } else {
-          $message = [
-            'Autorizacion' => 'Denegate',
-            'Status' => 'Login failed'
-          ];
-        }
+      } else {
+        $message = [
+          'Autorizacion' => 'Denegate',
+          'Status' => 'Login failed'
+        ];
       }
+    
 
       $payload = json_encode($message);
 
