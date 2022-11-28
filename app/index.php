@@ -19,6 +19,7 @@ require_once './controllers/UsuarioController.php';
 require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
+require_once './controllers/ArchivoController.php';
 require_once './middlewares/MWPermisos.php';
 
 
@@ -80,6 +81,11 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) {
   $group->post('/{pedidoId}/producto/{productoId}', \PedidoController::class . ':AgregarProducto')->add(\MWPermisos::class . ':VerificarChefMozoOBartender');
   $group->post('/estado/{pedidoId}', \PedidoController::class . ':ModificarEstadoPedido')->add(\MWPermisos::class . ':VerificarChefMozoOBartender');
   $group->get('/estado/{estado}', \PedidoController::class . ':TraerPorEstado')->add(\MWPermisos::class . ':VerificarUsuario');
+
+});
+
+$app->group('/archivos', function (RouteCollectorProxy $group) {
+  $group->get('/registro', \ArchivoController::class . ':VerRegistroLogin');
 
 });
 

@@ -92,6 +92,7 @@ class UsuarioController extends Usuario implements IApiUsable
       if (!empty($username) && ($username == $usuario->usuario) && ($clave == $usuario->clave)) {
 
         $jwt = AutentificadorJWT::CrearToken($usuario);
+        Usuario::GuardarRegistroLogin($usuario);
 
         $message = [
           'Autorizacion' => $jwt,

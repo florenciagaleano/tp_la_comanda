@@ -1,5 +1,8 @@
 <?php
 
+require_once './files/manejador_archivos.php';
+
+
 class Usuario
 {
     public $id;
@@ -83,5 +86,19 @@ class Usuario
         $consulta->execute(); 
         //echo $consulta->rowCount();
         return $consulta->rowCount();
+    }
+
+    public static function GuardarRegistroLogin($usuario){
+        $miArchivo = fopen("registro_usuarios.csv","a");
+        if(file_exists("registro_usuarios.csv")){
+            //var_dump($usuario);
+            fwrite($miArchivo,Usuario::GetCsvData($usuario));
+            fclose($miArchivo);
+            return true;
+        }
+    }
+
+    public static function GetCsvData($usuario){
+        return "$usuario->usuario,$usuario->rol," . (new DateTime('now'))->format('Y-m-d') . "\n";
     }
 }
