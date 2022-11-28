@@ -90,6 +90,7 @@ $app->group('/jwt', function (RouteCollectorProxy $group) {
     $token = trim(explode("Bearer", $header)[1]);
 
     try {
+      $user = AutentificadorJWT::ObtenerData($token);
       $payload = json_encode(array('datos' => AutentificadorJWT::ObtenerData($token)));
     } catch (Exception $e) {
       $payload = json_encode(array('error' => $e->getMessage()));

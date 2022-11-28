@@ -17,7 +17,7 @@ class MWPermisos
         $pedido_id = $parametros['pedido_id'];
 
         try {
-            $user = AutentificadorJWT::ObtenerData($jwtHeader);
+            $user = AutentificadorJWT::ObtenerData($token);
 
             $order = Pedido::obtenerPedidoPorId($pedido_id);
 
@@ -44,11 +44,11 @@ class MWPermisos
     public static function VerificarSocio(Request $request, RequestHandler $handler) {
         $jwtHeader = $request->getHeaderLine('Authorization');
         $token = trim(explode("Bearer", $jwtHeader)[1]);
-     var_dump(AutentificadorJWT::ObtenerData($token));
+     //var_dump(AutentificadorJWT::ObtenerData($token));
         $response = new Response();
 
         try {
-            $user = AutentificadorJWT::ObtenerData($jwtHeader);
+            $user = AutentificadorJWT::ObtenerData($token);
             if (strtoupper($user->rol) == 'SOCIO') {                
                 $response = $handler->handle($request);
                 $response = $response->withStatus( 200 );
@@ -70,7 +70,7 @@ class MWPermisos
         $response = new Response();
 
         try {
-            $user = AutentificadorJWT::ObtenerData($jwtHeader);
+            $user = AutentificadorJWT::ObtenerData($token);
 
             if (strtoupper($user->rol) != null) {                
                 $response = $handler->handle($request);
@@ -93,7 +93,7 @@ class MWPermisos
         $response = new Response();
 
         try {
-            $user = AutentificadorJWT::ObtenerData($jwtHeader);
+            $user = AutentificadorJWT::ObtenerData($token);
 
             if (strtoupper($user->rol) == 'MOZO' || strtoupper($user->rol) == 'SOCIO') {                
                 $response = $handler->handle($request);
@@ -116,7 +116,7 @@ class MWPermisos
         $response = new Response();
 
         try {
-            $user = AutentificadorJWT::ObtenerData($jwtHeader);
+            $user = AutentificadorJWT::ObtenerData($token);
 
             if (strtoupper($user->rol) == 'MOZO' || strtoupper($user->rol) == 'CHEF' || strtoupper($user->rol) == 'BARTENDER') {                
                 $response = $handler->handle($request);
