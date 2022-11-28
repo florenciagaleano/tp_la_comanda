@@ -42,39 +42,43 @@ $app->addBodyParsingMiddleware();
  */
 
 //Usuarios
+/*Necesita permisos de SOCIO para crear. modificar o dar de baja un usuario*/
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
     $group->get('[/]', \UsuarioController::class . ':TraerTodos');
     $group->get('/{usuario}', \UsuarioController::class .  ':TraerUno');
-    $group->post('[/]', \UsuarioController::class . ':CargarUno');
-    $group->put('[/{id}]', \UsuarioController::class . ':ModificarUno');
-    $group->delete('/{id}', \UsuarioController::class . ':BorrarUno');
+    $group->post('[/]', \UsuarioController::class . ':CargarUno')->add(\MWPermisos::class . ':VerificarSocio');
+    $group->put('[/{id}]', \UsuarioController::class . ':ModificarUno')->add(\MWPermisos::class . ':VerificarSocio');
+    $group->delete('/{id}', \UsuarioController::class . ':BorrarUno')->add(\MWPermisos::class . ':VerificarSocio');
     $group->post('/login', \UsuarioController::class . ':Login');
 });
 
 //Productos
+/*Necesita estar registrado para crear, modificar o dar de baja un producto*/
 $app->group('/productos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \ProductoController::class . ':TraerTodos');
-  $group->post('[/]', \ProductoController::class . ':CargarUno');
-  $group->put('[/{id}]', \ProductoController::class . ':ModificarUno');
-  $group->delete('/{id}', \ProductoController::class . ':BorrarUno');
+  $group->post('[/]', \ProductoController::class . ':CargarUno')->add(\MWPermisos::class . ':VerificarUsuario');
+  $group->put('[/{id}]', \ProductoController::class . ':ModificarUno')->add(\MWPermisos::class . ':VerificarUsuario');
+  $group->delete('/{id}', \ProductoController::class . ':BorrarUno')->add(\MWPermisos::class . ':VerificarUsuario');
 });
 
 //Mesas
+/*Necesita ser mesero o socio para crear, modificar o dar de baja un producto*/
 $app->group('/mesas', function (RouteCollectorProxy $group) {
   $group->get('[/]', \MesaController::class . ':TraerTodos');
-  $group->post('[/]', \MesaController::class . ':CargarUno');
-  $group->put('[/{id}]', \MesaController::class . ':ModificarUno');
-  $group->delete('/{id}', \MesaController::class . ':BorrarUno');
+  $group->post('[/]', \MesaController::class . ':CargarUno')->add(\MWPermisos::class . ':VerificarMozoOSocio');
+  $group->put('[/{id}]', \MesaController::class . ':ModificarUno')->add(\MWPermisos::class . ':VerificarMozoOSocio');
+  $group->delete('/{id}', \MesaController::class . ':BorrarUno')->add(\MWPermisos::class . ':VerificarMozoOSocio');
 });
 
 //Pedidos
+/*Necesita ser chef mozo o bartender para mdificar pedidos. Para ver pedidos por estado ecesita estar registrado*/
 $app->group('/pedidos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \PedidoController::class . ':TraerTodos');
   $group->post('/crear', \PedidoController::class . ':CargarUno');
   $group->delete('/{id}', \PedidoController::class . ':BorrarUno');
-  $group->post('/{pedidoId}/producto/{productoId}', \PedidoController::class . ':AgregarProducto');
-  $group->post('/estado/{pedidoId}', \PedidoController::class . ':ModificarEstadoPedido');
-  $group->get('[/estado]', \PedidoController::class . ':TraerPorEstado');
+  $group->post('/{pedidoId}/producto/{productoId}', \PedidoController::class . ':AgregarProducto')->add(\MWPermisos::class . ':VerificarChefMozoOBartender');
+  $group->post('/estado/{pedidoId}', \PedidoController::class . ':ModificarEstadoPedido')->add(\MWPermisos::class . ':VerificarChefMozoOBartender');
+  $group->get('[/estado]', \PedidoController::class . ':TraerPorEstado')->add(\MWPermisos::class . ':VerificarUsuario');
 
 });
 

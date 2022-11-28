@@ -12,12 +12,12 @@ class MWPermisos
     {
         $jwtHeader = $request->getHeaderLine('Authorization');
         $parametros = $request->getParsedBody();
-        $orderId = $parametros['orderId'];
+        $pedido_id = $parametros['pedido_id'];
 
         try {
             $user = AutentificadorJWT::ObtenerData($jwtHeader);
 
-            $order = Orden::GetOrderById($orderId);
+            $order = Pedido::obtenerPedidoPorId($pedido_id);
 
             if ($user->id != $order->userId || $order == null) {
                 throw new Exception("A este usuario no le corresponde el pedido ingresado.");
@@ -60,18 +60,18 @@ class MWPermisos
         return $response->withHeader('Content-Type', 'application/json');;
     }
 
-    public static function VerifyIsBartender(Request $request, RequestHandler $handler) {
+    public static function VerificarUsuario(Request $request, RequestHandler $handler) {
         $jwtHeader = $request->getHeaderLine('Authorization');
         $response = new Response();
 
         try {
             $user = AutentificadorJWT::ObtenerData($jwtHeader);
 
-            if (strtoupper($user->rol) == 'BARTENDER') {                
+            if (strtoupper($user->rol) != null) {                
                 $response = $handler->handle($request);
                 $response = $response->withStatus( 200 );
             } else {                
-                throw new Exception("El usuario no es bartender.");
+                throw new Exception("Falla en autentificacion.");
             }
         } catch (Exception $e) {         
             $payload = json_encode(array('Error: ' => $e->getMessage()));
@@ -81,39 +81,18 @@ class MWPermisos
         return $response->withHeader('Content-Type', 'application/json');;
     }
 
-    public static function VerifyIsChef(Request $request, RequestHandler $handler) {
-        $jwtHeader = $request->getHeaderLine('Authorization');
-        $response = new Response();
-
-        try {
-            $user = AutentificadorJWT::ObtenerData($jwtHeader);
-
-            if (strtoupper($user->rol) == 'CHEF') {                
-                $response = $handler->handle($request);
-                $response = $response->withStatus( 200 );
-            } else {                
-                throw new Exception("El usuario no es chef.");
-            }
-        } catch (Exception $e) {         
-            $payload = json_encode(array('Error: ' => $e->getMessage()));
-            $response->getBody()->write($payload);
-            $response = $response->withStatus( 401 );
-        }
-        return $response->withHeader('Content-Type', 'application/json');;
-    }
-
-    public static function VerifyIsWaitress(Request $request, RequestHandler $handler) {
+    public static function VerificarMozoOSocio(Request $request, RequestHandler $handler) {
         $jwtHeader = $request->getHeaderLine('Authorization');        
         $response = new Response();
 
         try {
             $user = AutentificadorJWT::ObtenerData($jwtHeader);
 
-            if (strtoupper($user->rol) == 'MOZO') {                
+            if (strtoupper($user->rol) == 'MOZO' || strtoupper($user->rol) == 'SOCIO') {                
                 $response = $handler->handle($request);
                 $response = $response->withStatus( 200 );
             } else {                
-                throw new Exception("El usuario no es mesero.");
+                throw new Exception("El usuario no es mesero ni socio.");
             }
         } catch (Exception $e) {         
             $payload = json_encode(array('Error: ' => $e->getMessage()));
@@ -122,4 +101,27 @@ class MWPermisos
         }
         return $response->withHeader('Content-Type', 'application/json');;
     }
+
+    public static function VerificarChefMozoOBartender(Request $request, RequestHandler $handler) {
+        $jwtHeader = $request->getHeaderLine('Authorization');        
+        $response = new Response();
+
+        try {
+            $user = AutentificadorJWT::ObtenerData($jwtHeader);
+
+            if (strtoupper($user->rol) == 'MOZO' || strtoupper($user->rol) == 'CHEF' || strtoupper($user->rol) == 'BARTENDER') {                
+                $response = $handler->handle($request);
+                $response = $response->withStatus( 200 );
+            } else {                
+                throw new Exception("El usuario no es mozo, bartender ni chef.");
+            }
+        } catch (Exception $e) {         
+            $payload = json_encode(array('Error: ' => $e->getMessage()));
+            $response->getBody()->write($payload);
+            $response = $response->withStatus( 401 );
+        }
+        return $response->withHeader('Content-Type', 'application/json');;
+    }
+
+
 }
