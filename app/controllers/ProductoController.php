@@ -6,23 +6,23 @@ class ProductoController extends Producto implements IApiUsable
 {
     public function CargarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
+      $jwtHeader = $request->getHeaderLine('Authorization');
 
-        $nombre = $parametros['nombre'];
-        $precio = $parametros['precio'];
+      $parametros = $request->getParsedBody();
 
-        // Creamos el Producto
-        $producto = new Producto();
-        $producto->nombre = $nombre;
-        $producto->precio = $precio;
-        $producto->crearProducto();
+      $nombre = $parametros['nombre'];
+      $tipo = $parametros['tipo'];
+      $precio = $parametros['precio'];
 
-        $payload = json_encode(array("mensaje" => "Producto creado con exito"));
+      $productId = Producto::crearProducto($nombre, $tipo, $precio);
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
-    }
+      $payload = json_encode(array("mensaje" => "Producto ". $productId ." creado con exito"));
+
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json')
+        ->withStatus(201);
+  }
 
     public function TraerUno($request, $response, $args)
     {
@@ -41,29 +41,32 @@ class ProductoController extends Producto implements IApiUsable
     
     public function ModificarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
+      $parametros = $request->getParsedBody();
 
-        $nombre = $parametros['nombre'];
-        Producto::modificarProducto($nombre);
+      $id = $args['id'];
+      Producto::modificarProducto($id);
 
-        $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
+      $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
-    }
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
+  }
 
     public function BorrarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
+      $parametros = $request->getParsedBody();
 
-        $ProductoId = $parametros['ProductoId'];
-        Producto::borrarProducto($ProductoId);
+      $id = $args['id'];
+      Producto::borrarProducto($id);
 
-        $payload = json_encode(array("mensaje" => "Producto borrado con exito"));
+      $payload = json_encode(array("mensaje" => "Producto borrado con exito"));
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
-    }
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
+  }
+
+
+
 }

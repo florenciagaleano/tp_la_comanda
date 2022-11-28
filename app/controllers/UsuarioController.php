@@ -33,7 +33,6 @@ class UsuarioController extends Usuario implements IApiUsable
 
     public function TraerUno($request, $response, $args)
     {
-        // Buscamos usuario por nombre
         $usr = $args['usuario'];
         $usuario = Usuario::obtenerUsuario($usr);
         $payload = json_encode($usuario);
@@ -57,8 +56,8 @@ class UsuarioController extends Usuario implements IApiUsable
     {
         $parametros = $request->getParsedBody();
 
-        $nombre = $parametros['nombre'];
-        Usuario::modificarUsuario($nombre);
+        $id = $args['id'];
+        Usuario::modificarUsuario($id);
 
         $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
 
@@ -71,8 +70,8 @@ class UsuarioController extends Usuario implements IApiUsable
     {
         $parametros = $request->getParsedBody();
 
-        $usuarioId = $parametros['usuarioId'];
-        Usuario::borrarUsuario($usuarioId);
+        $id = $args['id'];
+        Usuario::borrarUsuario($id);
 
         $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
 
@@ -80,4 +79,37 @@ class UsuarioController extends Usuario implements IApiUsable
         return $response
           ->withHeader('Content-Type', 'application/json');
     }
+
+    public function Login($request, $response, $args) {
+      $parametros = $request->getParsedBody();
+      $username =  $parametros['username'];
+      $clave =  $parametros['clave'];
+
+      if (isset($username) && isset($clave)) {
+        $usuario = Usuario::obtenerUsuario($username);
+
+        if (!empty($usuario) && ($username == $usuario->username) && ($clave == $usuario->clave)) {
+
+          $jwt = AutentificadorJWT::CrearToken($usuario);
+
+          $message = [
+            'Autorizacion' => $jwt,
+            'Status' => 'Login success'
+          ];
+
+        } else {
+          $message = [
+            'Autorizacion' => 'Denegate',
+            'Status' => 'Login failed'
+          ];
+        }
+      }
+
+      $payload = json_encode($message);
+
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
+    }
+  
 }

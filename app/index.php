@@ -43,37 +43,40 @@ $app->addBodyParsingMiddleware();
 
 //Usuarios
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
-  $group->get('[/]', \UsuarioController::class . ':TraerTodos');
-  $group->post('/crear', \UsuarioController::class . ':CargarUno');
+    $group->get('[/]', \UsuarioController::class . ':TraerTodos');
+    $group->get('/{usuario}', \UsuarioController::class .  ':TraerUno');
+    $group->post('[/]', \UsuarioController::class . ':CargarUno');
+    $group->put('[/{id}]', \UsuarioController::class . ':ModificarUno');
+    $group->delete('/{id}', \UsuarioController::class . ':BorrarUno');
+    $group->post('/login', \UsuarioController::class . ':Login');
 });
 
 //Productos
 $app->group('/productos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \ProductoController::class . ':TraerTodos');
-  $group->post('/crear', \ProductoController::class . ':CargarUno');
+  $group->post('[/]', \ProductoController::class . ':CargarUno');
+  $group->put('[/{id}]', \ProductoController::class . ':ModificarUno');
+  $group->delete('/{id}', \ProductoController::class . ':BorrarUno');
 });
 
 //Mesas
 $app->group('/mesas', function (RouteCollectorProxy $group) {
   $group->get('[/]', \MesaController::class . ':TraerTodos');
-  $group->post('/crear', \MesaController::class . ':CargarUno');
+  $group->post('[/]', \MesaController::class . ':CargarUno');
+  $group->put('[/{id}]', \MesaController::class . ':ModificarUno');
+  $group->delete('/{id}', \MesaController::class . ':BorrarUno');
 });
 
 //Pedidos
 $app->group('/pedidos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \PedidoController::class . ':TraerTodos');
   $group->post('/crear', \PedidoController::class . ':CargarUno');
-});
+  $group->delete('/{id}', \PedidoController::class . ':BorrarUno');
+  $group->post('/{pedidoId}/producto/{productoId}', \PedidoController::class . ':AgregarProducto');
+  $group->post('/estado/{pedidoId}', \PedidoController::class . ':ModificarEstadoPedido');
+  $group->get('[/estado]', \PedidoController::class . ':TraerPorEstado');
 
-  $app->get('[/]', function (Request $request, Response $response) {    
-    $payload = json_encode(array("mensaje" => "Slim Framework 4 PHP"));
-    
-    // Pausa para probar el middleware (10 segundos)
-    sleep(10);
-    
-    $response->getBody()->write($payload);
-    return $response->withHeader('Content-Type', 'application/json');
-})->add(new LoggerMiddleware());
+});
 
 $app->run();
 

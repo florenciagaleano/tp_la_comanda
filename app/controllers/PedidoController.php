@@ -38,14 +38,14 @@ class PedidoController extends Pedido implements IApiUsable
 
     public function TraerUno($request, $response, $args)
     {
-        // Buscamos Pedido por nombre
+       /* // Buscamos Pedido por nombre
         $usr = $args['Pedido'];
         $Pedido = Pedido::obtenerPedido($usr);
         $payload = json_encode($Pedido);
 
         $response->getBody()->write($payload);
         return $response
-          ->withHeader('Content-Type', 'application/json');
+          ->withHeader('Content-Type', 'application/json');*/
     }
 
     public function TraerTodos($request, $response, $args)
@@ -60,12 +60,17 @@ class PedidoController extends Pedido implements IApiUsable
     
     public function ModificarUno($request, $response, $args)
     {
+        return null;
+    }
+
+    public function ModificarEstadoPedido($request, $response, $args)
+    {
         $parametros = $request->getParsedBody();
+        $id = $args['id'];
+        $estado = $parametros['estado'];
+        Pedido::modificarEstado($id,$estado);
 
-        $nombre = $parametros['nombre'];
-        Pedido::modificarPedido($nombre);
-
-        $payload = json_encode(array("mensaje" => "Pedido modificado con exito"));
+        $payload = json_encode(array("mensaje" => "Estado cambiado con exito"));
 
         $response->getBody()->write($payload);
         return $response
@@ -76,10 +81,47 @@ class PedidoController extends Pedido implements IApiUsable
     {
         $parametros = $request->getParsedBody();
 
-        $PedidoId = $parametros['PedidoId'];
-        Pedido::borrarPedido($PedidoId);
+        $id = $args['id'];
+        Pedido::borrarPedido($id);
 
         $payload = json_encode(array("mensaje" => "Pedido borrado con exito"));
+
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json');
+    }
+
+    public function AgregarProducto($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+        $pedido_id = $parametros['pedido_id'];
+        $producto_id = $parametros['producto_id'];
+
+        $pedido = Pedido::obtenerPedidoPorId($pedido_id);
+        $product = Producto::obtenerProductoPorId($producto_id);
+
+        if(!is_null($pedido) && !is_null($product)) {
+            $pedido = Pedido::crearPedido($pedido->table_id, $pedido->user_id, $product->id, $pedido->status, $pedido->pedidoNumber, $pedido->picture);
+            
+            //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Agregando el producto " . $product->productName . " al pedido " . $order->orderNumber);
+            $payload = json_encode(array("mensaje" => "Producto agregado al pedido con exito"));
+            $response->getBody()->write($payload);
+            return $response
+              ->withHeader('Content-Type', 'application/json')
+              ->withStatus(201);
+        } else{
+            $payload = json_encode(array("mensaje" => "Ocurrio un error al agregar el producto al pedido"));
+        }
+    }
+
+    public function TraerPorEstado($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+
+        $estado = $args['estado'];
+        $lista = Pedido::obtenerPedidosPorEstado($estado);
+
+        $payload = json_encode(array("listaPedido" => $lista));
 
         $response->getBody()->write($payload);
         return $response
