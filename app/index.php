@@ -58,7 +58,7 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
 /*Necesita estar registrado para crear, modificar o dar de baja un producto*/
 $app->group('/productos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \ProductoController::class . ':TraerTodos');
-  $group->post('[/]', \ProductoController::class . ':CargarUno')->add(\MWPermisos::class . ':VerificarUsuario');
+  $group->post('/crear', \ProductoController::class . ':CargarUno');
   $group->put('[/{id}]', \ProductoController::class . ':ModificarUno')->add(\MWPermisos::class . ':VerificarUsuario');
   $group->delete('/{id}', \ProductoController::class . ':BorrarUno')->add(\MWPermisos::class . ':VerificarUsuario');
 });
@@ -67,18 +67,18 @@ $app->group('/productos', function (RouteCollectorProxy $group) {
 /*Necesita ser mesero o socio para crear, modificar o dar de baja un producto*/
 $app->group('/mesas', function (RouteCollectorProxy $group) {
   $group->get('[/]', \MesaController::class . ':TraerTodos');
-  $group->post('[/]', \MesaController::class . ':CargarUno')->add(\MWPermisos::class . ':VerificarMozoOSocio');
+  $group->post('/crear', \MesaController::class . ':CargarUno');
   $group->put('[/{id}]', \MesaController::class . ':ModificarUno')->add(\MWPermisos::class . ':VerificarMozoOSocio');
   $group->delete('/{id}', \MesaController::class . ':BorrarUno')->add(\MWPermisos::class . ':VerificarMozoOSocio');
 });
 
 //Pedidos
 /*Necesita ser chef mozo o bartender para mdificar pedidos. Para ver pedidos por estado ecesita estar registrado*/
-$app->group('/pedidos', function (RouteCollectorProxy $group) {
+$app->group('/pedidoss', function (RouteCollectorProxy $group) {
   $group->get('[/]', \PedidoController::class . ':TraerTodos');
   $group->post('/crear', \PedidoController::class . ':CargarUno');
   $group->delete('/{id}', \PedidoController::class . ':BorrarUno');
-  $group->post('/{pedidoId}/producto/{productoId}', \PedidoController::class . ':AgregarProducto')->add(\MWPermisos::class . ':VerificarChefMozoOBartender');
+  $group->post('/{pedidoId}/producto/{productoId}', \PedidoController::class . ':AgregarProducto');
   $group->post('/estado/{pedidoId}', \PedidoController::class . ':ModificarEstadoPedido')->add(\MWPermisos::class . ':VerificarChefMozoOBartender');
   $group->get('/estado/{estado}', \PedidoController::class . ':TraerPorEstado')->add(\MWPermisos::class . ':VerificarUsuario');
 

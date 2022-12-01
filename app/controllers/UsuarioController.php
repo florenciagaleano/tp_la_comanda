@@ -1,117 +1,164 @@
 <?php
-require_once './models/Usuario.php';
+
+// use app\Models\HistoricAccions;
+// use app\Models\Usuario as Usuario;
+
+//require_once './../models/Usuario.php';
 require_once './interfaces/IApiUsable.php';
-require_once './middlewares/AutentificadorJWT.php';
 
-
-class UsuarioController extends Usuario implements IApiUsable
+class UsuarioController implements IApiUsable
 {
     public function CargarUno($request, $response, $args)
     {
+
         $parametros = $request->getParsedBody();
 
         $usuario = $parametros['usuario'];
         $clave = $parametros['clave'];
-        $estado = "ACTIVO";
-        $rol = $parametros['rol'];
-        $sector = $parametros['sector'];
+        $rol = $parametros['rol'];        
+        $area = $parametros['area'];
 
-        // Creamos el usuario
-        $usr = new Usuario();
-        $usr->usuario = $usuario;
-        $usr->clave = $clave;
-        $usr->estado = $estado;
-        $usr->rol = $rol;
-        $usr->sector = $sector;
+        $nuevoUsuario = new Usuario();
+        $nuevoUsuario->usuario = $usuario;
+        $nuevoUsuario->clave = $clave;
+        $nuevoUsuario->setRol($rol);
+        $nuevoUsuario->setArea($area);
 
-        $usr->crearUsuario();
+        $userId = $nuevoUsuario->CrearUsuario();
 
-        $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
+        $payload = json_encode(array("mensaje" => "Usuario ". $userId. " creado con exito"));
 
         $response->getBody()->write($payload);
         return $response
-          ->withHeader('Content-Type', 'application/json');
+          ->withHeader('Content-Type', 'application/json')
+          ->withStatus(201);
     }
 
     public function TraerUno($request, $response, $args)
     {
-        $usr = $args['usuario'];
-        $usuario = Usuario::obtenerUsuario($usr);
+        $jwtHeader = $request->getHeaderLine('Authorization');
+
+        $id = $args['id'];
+        $usuario = Usuario::GetUserById($id);
+
         $payload = json_encode($usuario);
 
         $response->getBody()->write($payload);
         return $response
-          ->withHeader('Content-Type', 'application/json');
+          ->withHeader('Content-Type', 'application/json')
+          ->withStatus(200);
     }
 
     public function TraerTodos($request, $response, $args)
     {
-        $lista = Usuario::obtenerTodos();
-        $payload = json_encode(array("listaUsuario" => $lista));
+        $jwtHeader = $request->getHeaderLine('Authorization');
+
+        $lista = Usuario::TraerTodos();
+
+        $payload = json_encode(array("usuarios" => $lista));
 
         $response->getBody()->write($payload);
         return $response
-          ->withHeader('Content-Type', 'application/json');
+          ->withHeader('Content-Type', 'application/json')
+          ->withStatus(200);
     }
     
     public function ModificarUno($request, $response, $args)
     {
+        $jwtHeader = $request->getHeaderLine('Authorization');
+
         $parametros = $request->getParsedBody();
+        $id = $args['id'];        
+        $area = $parametros['area'];
+        
+        Usuario::UpdateUser($id, $area);
+        HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Modificando el area del usuario con id: " . $id);
 
-        $id = $args['id'];
-        Usuario::modificarUsuario($id);
-
-        $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
+        $payload = json_encode(array("mensaje" => "Usuario ".$id." modificado con exito"));
 
         $response->getBody()->write($payload);
         return $response
-          ->withHeader('Content-Type', 'application/json');
+          ->withHeader('Content-Type', 'application/json')
+          ->withStatus(200);
     }
 
     public function BorrarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
-
+        $jwtHeader = $request->getHeaderLine('Authorization');
+        
         $id = $args['id'];
-        Usuario::borrarUsuario($id);
 
-        $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
+        Usuario::LogicalDelete($id);
+
+        HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Borrando el usuario con id: " . $id);
+
+        $payload = json_encode(array("mensaje" => "Usuario ".$id ." borrado con exito"));
 
         $response->getBody()->write($payload);
         return $response
-          ->withHeader('Content-Type', 'application/json');
+          ->withHeader('Content-Type', 'application/json')
+          ->withStatus(200);
     }
 
     public function Login($request, $response, $args) {
-      $parametros = $request->getParsedBody();
-      $username =  $parametros['usuario'];
-      $clave =  $parametros['clave'];
+    $parametros = $request->getParsedBody();
+    $user =  $parametros['user'];
+    $clave =  $parametros['clave'];
 
-      $usuario = Usuario::obtenerUsuario($username);
+    if (isset($user) && isset($clave)) {
+      $usuario = Usuario::GetUserByUsername($user);
 
-      if (!empty($username) && ($username == $usuario->usuario) && ($clave == $usuario->clave)) {
+      if (!empty($usuario) && ($user == $usuario->usuario) && ($clave == $usuario->user_clave)) {
 
-        $jwt = AutentificadorJWT::CrearToken($usuario);
-        Usuario::GuardarRegistroLogin($usuario);
+        $jwt = AutentificadorJWT::CreateToken($usuario);
 
         $message = [
           'Autorizacion' => $jwt,
           'Status' => 'Login success'
         ];
 
+        HistoricAccions::CreateRegistry($usuario->id, "Login exitoso");
       } else {
         $message = [
           'Autorizacion' => 'Denegate',
           'Status' => 'Login failed'
         ];
       }
-    
-
-      $payload = json_encode($message);
-
-      $response->getBody()->write($payload);
-      return $response
-        ->withHeader('Content-Type', 'application/json');
     }
-  
+
+    $payload = json_encode($message);
+
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json');
+  }
+
+  public function ConsultaUsuarios($request, $response, $args) {
+    $consulta = $args['consulta'];
+
+    switch($consulta) {
+      case 'LogueoUsuarios':
+        $lista = HistoricAccions::GetTimeLogin();
+        break;
+      case 'OperacionXSector':
+        $lista = HistoricAccions::GetCantOperacionesPorSector();
+        break;
+      case 'OperacionXUsuario':
+        $lista = HistoricAccions::GetCantOperacionesPorUsuario();
+        break;
+      case 'OperacionXEmpleado':
+        $lista = HistoricAccions::GetCantOperacionesPorEmpleado();
+        break;
+      default:
+        $lista = "Error, ingresar valor valido";
+        break;
+    }
+
+    $payload = json_encode(array("consulta" => $lista));
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json');
+  }
 }
+
+?>
