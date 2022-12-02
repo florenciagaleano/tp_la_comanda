@@ -1,9 +1,7 @@
 <?php
 
-// use app\Models\HistoricAccions;
-// use app\Models\Usuario as Usuario;
-
-//require_once './../models/Usuario.php';
+require_once './models/Usuario.php';
+require_once './middlewares/AutentificadorJWT.php';
 require_once './interfaces/IApiUsable.php';
 
 class UsuarioController implements IApiUsable
@@ -39,7 +37,7 @@ class UsuarioController implements IApiUsable
         $jwtHeader = $request->getHeaderLine('Authorization');
 
         $id = $args['id'];
-        $usuario = Usuario::GetUserById($id);
+        $usuario = Usuario::GetUsuarioById($id);
 
         $payload = json_encode($usuario);
 
@@ -72,7 +70,7 @@ class UsuarioController implements IApiUsable
         $area = $parametros['area'];
         
         Usuario::UpdateUser($id, $area);
-        HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Modificando el area del usuario con id: " . $id);
+        //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Modificando el area del usuario con id: " . $id);
 
         $payload = json_encode(array("mensaje" => "Usuario ".$id." modificado con exito"));
 
@@ -90,7 +88,7 @@ class UsuarioController implements IApiUsable
 
         Usuario::LogicalDelete($id);
 
-        HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Borrando el usuario con id: " . $id);
+        //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Borrando el usuario con id: " . $id);
 
         $payload = json_encode(array("mensaje" => "Usuario ".$id ." borrado con exito"));
 
@@ -101,36 +99,37 @@ class UsuarioController implements IApiUsable
     }
 
     public function Login($request, $response, $args) {
-    $parametros = $request->getParsedBody();
-    $user =  $parametros['user'];
-    $clave =  $parametros['clave'];
+      $parametros = $request->getParsedBody();
+      $user =  $parametros['usuario'];
+      $clave =  $parametros['clave'];
+      
+      if (isset($user) && isset($clave)) {
 
-    if (isset($user) && isset($clave)) {
-      $usuario = Usuario::GetUserByUsername($user);
+        $usuario = Usuario::GetUsuarioByNombre($user);
+        //var_dump()
+        if (!empty($usuario) && ($user == $usuario->usuario) && ($clave == $usuario->clave)) {
 
-      if (!empty($usuario) && ($user == $usuario->usuario) && ($clave == $usuario->user_clave)) {
+          $jwt = AutentificadorJWT::CrearToken($usuario);
 
-        $jwt = AutentificadorJWT::CreateToken($usuario);
+          $message = [
+            'Autorizacion' => $jwt,
+            'Status' => 'Login success'
+          ];
 
-        $message = [
-          'Autorizacion' => $jwt,
-          'Status' => 'Login success'
-        ];
-
-        HistoricAccions::CreateRegistry($usuario->id, "Login exitoso");
-      } else {
-        $message = [
-          'Autorizacion' => 'Denegate',
-          'Status' => 'Login failed'
-        ];
+          //HistoricAccions::CreateRegistry($usuario->id, "Login exitoso");
+        } else {
+          $message = [
+            'Autorizacion' => 'Denegate',
+            'Status' => 'Login failed'
+          ];
+        }
       }
-    }
 
-    $payload = json_encode($message);
+      $payload = json_encode($message);
 
-    $response->getBody()->write($payload);
-    return $response
-      ->withHeader('Content-Type', 'application/json');
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json');
   }
 
   public function ConsultaUsuarios($request, $response, $args) {

@@ -73,12 +73,12 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
 });
 
 //Pedidos
-/*Necesita ser chef mozo o bartender para mdificar pedidos. Para ver pedidos por estado ecesita estar registrado*/
+/*Necesita ser chef mozo o bartender para mdificar pedidos. Para ver pedidos por estado Necesita estar registrado*/
 $app->group('/pedidoss', function (RouteCollectorProxy $group) {
   $group->get('[/]', \PedidoController::class . ':TraerTodos');
   $group->post('/crear', \PedidoController::class . ':CargarUno');
   $group->delete('/{id}', \PedidoController::class . ':BorrarUno');
-  $group->post('/{pedidoId}/producto/{productoId}', \PedidoController::class . ':AgregarProducto');
+  $group->post('/agregarproducto', \PedidoController::class . ':AgregarProducto');
   $group->post('/estado/{pedidoId}', \PedidoController::class . ':ModificarEstadoPedido')->add(\MWPermisos::class . ':VerificarChefMozoOBartender');
   $group->get('/estado/{estado}', \PedidoController::class . ':TraerPorEstado')->add(\MWPermisos::class . ':VerificarUsuario');
 

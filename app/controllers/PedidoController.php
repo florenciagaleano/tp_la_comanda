@@ -30,7 +30,7 @@ class PedidoController implements IApiUsable
         $usuario = Usuario::GetUsuarioById($usuarioId);
         $product = Producto::GetProductoById($productoId);
 
-        var_dump($mesa);
+        //var_dump($mesa);
 
         if(!is_null($mesa) && !is_null($usuario) && !is_null($product) && $mesa->estado == 'vacia'){
             $nuevoPedido = new Pedido();
@@ -81,7 +81,7 @@ class PedidoController implements IApiUsable
     {      
         $jwtHeader = $request->getHeaderLine('Authorization');
 
-        $lista = Pedido::GetAllPedidos();
+        $lista = Pedido::GetPedidos();
 
         //cAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Listando todos los pedidos");
 
@@ -94,112 +94,25 @@ class PedidoController implements IApiUsable
     }
 
     public function ModificarUno($request, $response, $args) {
-        $jwtHeader = $request->getHeaderLine('Authorization');
-
-        $parametros = $request->getParsedBody();
-        $id = $args['id'];
-        $mesaId = $parametros['mesaId'];
-        $usuarioId = $parametros['usuarioId'];
-
-        $mesa = Mesa::GetMesaById($mesaId);        
-        $usuario = Usuario::GetUserById($usuarioId);
-
-        if(!is_null($mesa) && !is_null($usuario) && $mesa->mesa_estado == 'vacia'){
-
-            $pedido = Pedido::GetPedidoById($id);
-
-            $newFilename = Pedido::FindAndChangePictureName($pedido->picture, $pedido->pedidoNumber, $mesa->id);
-
-            $pedido = Pedido::UpdateUserAndMesa($id, $mesaId, $usuarioId, $newFilename);
-
-            HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "El pedido con id: " . $pedido . " cambio de mesa o de mozo");
-
-            $payload = json_encode(array("mensaje" => "Pedido modificado con MesaId: " . $mesaId . " y UserId: " . $usuarioId));
-
-            $response->getBody()->write($payload);
-            return $response
-              ->withHeader('Content-Type', 'application/json')
-              ->withStatus(200);
-        } else{
-            $payload = json_encode(array("mensaje" => "Id Usuario || Id Mesa son INEXISTENTES o la mesa ya esta ocupada"));
-        }
-      
-      $response->getBody()->write($payload);
-      return $response->withHeader('Content-Type', 'application/json');
+        return null;
     }
     
-    public static function ModificarPedidoFromChef($request, $response, $args)
+    public function ModificarEstadoPedido($request, $response, $args)
     {
-        $jwtHeader = $request->getHeaderLine('Authorization');
-
         $parametros = $request->getParsedBody();
+        $id = $args['pedidoId'];
+        $estado = $parametros['estado'];
+        $tiempo_estimado = $parametros['tiempo_estimado'];
 
-        $pedidoNumber = $args['pedidoNumber'];
-        $pedido_estado = $parametros['pedidoStatus'];
-        $estimatedTime = $parametros['estimatedTime'];
+        //var_dump($tiempo_estimado);
 
-        if($pedido_estado != "en preparacion" && $pedido_estado != "listo para servir") {
-            throw new Exception("El estado no es valido");
-        }
+        Pedido::ModificarEstado($id,$estado,$tiempo_estimado);
 
-        $pedidos = Pedido::GetPedidoByPedidoNumber($pedidoNumber);        
-        
-        if(!is_null($pedidos)) {
-          Pedido::UpdatePedidoChef($pedidoNumber, $pedido_estado, $estimatedTime);
-          HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "CHEF. Modificando el estado del pedido " . $pedidoNumber . " a " . $pedido_estado);
-          $payload = json_encode(array("mensaje" => "Pedido " .$pedidoNumber. " modificado con exito"));
-        } else {
-          $payload = json_encode(array("mensaje" => "El pedido con numero de pedido: " .$pedidoNumber. " no existe"));
-        }
+        $payload = json_encode(array("mensaje" => "Estado cambiado con exito"));
 
         $response->getBody()->write($payload);
         return $response
-          ->withHeader('Content-Type', 'application/json')
-          ->withStatus(200);
-    }
-    
-    public static function ModificarPedidoFromWaitress($request, $response, $args)
-    {
-        $jwtHeader = $request->getHeaderLine('Authorization');
-
-        $parametros = $request->getParsedBody();
-
-        $pedidoNumber = $args['pedidoNumber'];
-        $pedido_estado = $parametros['pedidoStatus'];
-
-        if($pedido_estado != "servido" && $pedido_estado != "cobrado") {
-            throw new Exception("El estado no es valido");
-        }
-        
-        $pedido = Pedido::GetPedidoByPedidoNumber($pedidoNumber);
-        $mesa = Mesa::GetMesaByMesaNumber($pedido[0]->mesa_id);
-        $totalPrice = 0;
-
-        if(!is_null($pedido)) {
-          if($pedido_estado == "servido") {            
-              Mesa::UpdateMesa($mesa->mesa_number, 'con cliente comiendo');
-          } else {
-            Mesa::UpdateMesa($mesa->mesa_number, 'vacia');
-
-            for ($i=0; $i < count($pedido) ; $i++) { 
-              $producto = Product::GetProductById($pedido[$i]->product_id);         
-              $totalPrice += $producto->price;
-            }
-          }
-        
-          Pedido::UpdatePedidoWaitress($pedidoNumber, $pedido_estado, $totalPrice);
-          Pedido::SetPrice($pedidoNumber, $totalPrice);
-
-          HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "MOZO. Modificando el estado del pedido " . $pedidoNumber . " a " . $pedido_estado);
-          $payload = json_encode(array("mensaje" => "Pedido " .$pedidoNumber. " modificado con exito"));
-        } else {
-          $payload = json_encode(array("mensaje" => "El pedido con id: " .$pedidoNumber. " no existe"));
-        }
-
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json')
-          ->withStatus(200);
+          ->withHeader('Content-Type', 'application/json');
     }
 
     public function BorrarUno($request, $response, $args)
@@ -209,7 +122,7 @@ class PedidoController implements IApiUsable
         $id = $args['id'];
         Pedido::DeletePedido($id);
           
-        HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Borrando el pedido con id: " . $id);
+        //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Borrando el pedido con id: " . $id);
           
         $payload = json_encode(array("mensaje" => "Pedido " .$id. " borrado con exito"));       
 
@@ -219,18 +132,28 @@ class PedidoController implements IApiUsable
           ->withStatus(200);
     }
 
-    public function AddProductInThePedido($request, $response, $args) {
+    public function AgregarProducto($request, $response, $args) {
         $jwtHeader = $request->getHeaderLine('Authorization');
+        $parametros = $request->getParsedBody();
 
-        $pedidoId = $args['pedidoId'];
-        $productoId = $args['productoId'];
+        $pedidoId = $parametros['pedidoId'];
+        $productoId = $parametros['productoId'];
 
         $pedido = Pedido::GetPedidoById($pedidoId);
-        $product = Product::GetProductById($productoId);
-
+        $product = Producto::GetProductoById($productoId);
+        //var_dump($pedido);
         if(!is_null($pedido) && !is_null($product)) {
-            $pedido = Pedido::CreatePedido($pedido->mesa_id, $pedido->usuario_id, $product->id, $pedido->estado, $pedido->pedidoNumber, $pedido->picture);
-            HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, ("Agregando el producto " . $product->productName . " al pedido " . strval($pedido->pedidoNumber)));
+          $nuevoPedido = new Pedido();
+          $nuevoPedido->usuario_id = $pedido->usuario_id;
+          $nuevoPedido->producto_id = $productoId;
+          $nuevoPedido->mesa_id = $pedido->mesa_id;
+          $nuevoPedido->estado = $pedido->estado;
+          $nuevoPedido->nro_pedido = rand(1, 100000);
+          $nuevoPedido->imagen = null;
+          $nuevoPedido->nombre_cliente = $pedido->nombre_cliente;
+
+          $nuevoPedido->CrearPedido();
+          //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, ("Agregando el producto " . $product->productName . " al pedido " . strval($pedido->pedidoNumber)));
             $payload = json_encode(array("mensaje" => "Producto agregado al pedido con exito"));
             $response->getBody()->write($payload);
             return $response

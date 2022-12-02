@@ -40,15 +40,19 @@ class Pedido
             $consulta->bindValue(':imagen', $imagenGuardar, PDO::PARAM_STR);
             $consulta->bindValue(':nombre_cliente', $this->nombre_cliente, PDO::PARAM_STR);
 
-            $consulta->execute();
-            
+            try{
+                $consulta->execute();
+
+            }catch(Exception $e){
+                echo $e->getMessage();
+            }
             return $objAccesoDatos->obtenerUltimoId();
         } catch (Exception $e) {
             return $e->getMessage();
         }
     }
 
-    public static function GetAllPedidos() {
+    public static function GetPedidos() {
         try {
             $objAccesoDatos = AccesoDatos::obtenerInstancia();
             $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM pedido WHERE estado != 'CANCELADO'");
@@ -62,6 +66,34 @@ class Pedido
             return $e->getMessage();
         }
     }
+
+    public static function ModificarEstado($id,$estado,$tiempo_estimado)
+    {
+        $objAccesoDato = AccesoDatos::obtenerInstancia();
+
+        if($estado == 'en preparacion' || $estado == 'listo para servir' || $estado == 'pagado'){
+            if($tiempo_estimado != null){
+                $consulta = $objAccesoDato->prepararConsulta("UPDATE pedido SET estado = :estado, tiempo_estimado = :tiempo_estimado WHERE id = :id");
+                $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+                $consulta->bindValue(':tiempo_estimado', (int)$tiempo_estimado, PDO::PARAM_INT);
+                $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+                $consulta->execute();
+            }else{
+                $consulta = $objAccesoDato->prepararConsulta("UPDATE pedido SET estado = :estado WHERE id = :id");
+                $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+                $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+                $consulta->execute();
+            }
+        }
+
+        if($estado == 'listo para servir'){
+            $consulta = $objAccesoDato->prepararConsulta("UPDATE pedido SET fecha_finalizacion = :fecha_finalizacion WHERE id = :id");
+            $consulta->bindValue(':fecha_finalizacion', date("Y-m-d H:i:s"), PDO::PARAM_STR);
+            $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+            $consulta->execute();
+        }
+    }
+
 
     public static function GetLoMasYMenosVendido($orderBy) {
         try {
@@ -82,19 +114,15 @@ class Pedido
     }
 
     public static function GetPedidoById($id) {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM pedido WHERE id = :id");
-            $consulta->bindValue(':id', $id, PDO::PARAM_INT);
-            $consulta->execute();
-            $order = $consulta->fetchObject("Pedido");
-            if (is_null($order)) {
-                throw new Exception("No existe el pedido con el id " . $id);
-            }
-            return $order;
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
+        $id = intval($id);
+        var_dump($id);
+
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM pedido WHERE id = :id");
+        $consulta->bindValue(':id', 1, PDO::PARAM_INT);
+        $consulta->execute();
+        //var_dump($consulta->fetchObject("Pedido"));
+        return $consulta->fetchObject("Pedido");
     }
 
     public static function GetPedidosByStatus($estado) {
