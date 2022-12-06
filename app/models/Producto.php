@@ -1,9 +1,6 @@
 <?php
 
-// namespace App\Models;
-
-// use Exception;
-// use Illuminate\Database\Eloquent\Model;
+require_once './models/Usuario.php';
 
 class Producto 
 {
@@ -33,6 +30,30 @@ class Producto
                 throw new Exception("No existen productos");
             }
             return $products;
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
+    public static function GetPendientesByArea($id) {
+        try {
+
+            $userAux = Usuario::GetUsuarioById($id);
+            if($userAux != null){
+                $objAccesoDatos = AccesoDatos::obtenerInstancia();
+                $consulta = $objAccesoDatos->prepararConsulta("SELECT u.area, p.nombre from producto p inner join pedido_producto pp on p.id = pp.id_producto inner join pedido pd on pp.id_pedido = pd.id
+                inner join usuario u on u.id = pd.usuario_id where u.area = :area
+                and pd.estado = :estado");
+                $consulta->bindValue(':area', $userAux->area, PDO::PARAM_STR);
+                $consulta->bindValue(':estado', "en preparacion", PDO::PARAM_STR);
+                
+                $consulta->execute();
+                $products = $consulta->fetchAll();
+                if (is_null($products)) {
+                    throw new Exception("No existen productos");
+                }
+                return $products;
+            }
         } catch (Exception $e) {
             return $e->getMessage();
         }

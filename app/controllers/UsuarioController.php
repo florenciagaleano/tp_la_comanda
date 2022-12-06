@@ -136,32 +136,6 @@ class UsuarioController implements IApiUsable
         ->withHeader('Content-Type', 'application/json');
   }
 
-  public function ConsultaUsuarios($request, $response, $args) {
-    $consulta = $args['consulta'];
-
-    switch($consulta) {
-      case 'LogueoUsuarios':
-        $lista = HistoricAccions::GetTimeLogin();
-        break;
-      case 'OperacionXSector':
-        $lista = HistoricAccions::GetCantOperacionesPorSector();
-        break;
-      case 'OperacionXUsuario':
-        $lista = HistoricAccions::GetCantOperacionesPorUsuario();
-        break;
-      case 'OperacionXEmpleado':
-        $lista = HistoricAccions::GetCantOperacionesPorEmpleado();
-        break;
-      default:
-        $lista = "Error, ingresar valor valido";
-        break;
-    }
-
-    $payload = json_encode(array("consulta" => $lista));
-    $response->getBody()->write($payload);
-    return $response
-      ->withHeader('Content-Type', 'application/json');
-  }
 }
 
 ?>

@@ -74,4 +74,19 @@ class ProductoController implements IApiUsable
         return null;
     }
 
+    public function TraerProductosPorArea($request, $response, $args)
+    {
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+    
+        $lista = Producto::GetPendientesByArea(AutentificadorJWT::ObtenerData($token)->id);
+
+        $payload = json_encode(array("pendientes" => $lista));
+
+        $response->getBody()->write($payload);
+        return $response
+          ->withHeader('Content-Type', 'application/json')
+          ->withStatus(200);
+    }
+
 }

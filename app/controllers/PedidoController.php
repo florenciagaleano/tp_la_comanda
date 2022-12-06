@@ -166,8 +166,10 @@ class PedidoController implements IApiUsable
 
     public function TraerTodosSegunEstado($request, $response, $args) {
         $jwtHeader = $request->getHeaderLine('Authorization');
+        $parametros = $request->getParsedBody();
 
-        $estado = $args['estado'];
+
+        $estado = $parametros['estado'];
         $lista = Pedido::GetPedidosByStatus($estado);
 
         if(!is_null($lista)) {

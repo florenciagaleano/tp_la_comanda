@@ -53,6 +53,7 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
     $group->put('[/{id}]', \UsuarioController::class . ':ModificarUno')->add(\MWPermisos::class . ':VerificarSocio');
     $group->delete('/{id}', \UsuarioController::class . ':BorrarUno')->add(\MWPermisos::class . ':VerificarSocio');
     $group->post('/login', \UsuarioController::class . ':Login');
+
 });
 
 //Productos
@@ -60,6 +61,8 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
 $app->group('/productos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \ProductoController::class . ':TraerTodos');
   $group->post('/crear', \ProductoController::class . ':CargarUno')->add(\MWPermisos::class . ':VerificarUsuario');
+  $group->get('/productospendientesporarea', \ProductoController::class . ':TraerProductosPorArea');
+
 });
 
 //Mesas
@@ -79,7 +82,7 @@ $app->group('/pedidoss', function (RouteCollectorProxy $group) {
   $group->delete('/{id}', \PedidoController::class . ':BorrarUno');
   $group->post('/agregarproducto', \PedidoController::class . ':AgregarProducto');
   $group->post('/estado/{pedidoId}', \PedidoController::class . ':ModificarEstadoPedido')->add(\MWPermisos::class . ':VerificarChefMozoOBartender');
-  $group->get('/estado/{estado}', \PedidoController::class . ':TraerPorEstado')->add(\MWPermisos::class . ':VerificarUsuario');
+  $group->get('/getbyestado', \PedidoController::class . ':TraerTodosSegunEstado')->add(\MWPermisos::class . ':VerificarUsuario');
 
 });
 
