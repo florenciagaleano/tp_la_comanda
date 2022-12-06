@@ -17,7 +17,8 @@ class PedidoController implements IApiUsable
     
     public function CargarUno($request, $response, $args)
     {
-        $jwtHeader = $request->getHeaderLine('Authorization');    
+      $header = $request->getHeaderLine('Authorization');
+      $token = trim(explode("Bearer", $header)[1]);
         $parametros = $request->getParsedBody();
 
         $mesaId = $parametros['nro_mesa'];
@@ -45,7 +46,7 @@ class PedidoController implements IApiUsable
             $pedido = $nuevoPedido->CrearPedido();
             $mesa = Mesa::ActualizarEstado($mesaId, 'con cliente esperando pedido');
 
-            //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Creando el pedido con id " . $pedido);
+            Registro::CrearRegistro(AutentificadorJWT::ObtenerData($token)->id, "CREAR PEDIDO");
 
             $payload = json_encode(array("mensaje" => "Pedido ". $pedido." creado con exito"));
             $response->getBody()->write($payload);
@@ -53,7 +54,7 @@ class PedidoController implements IApiUsable
               ->withHeader('Content-Type', 'application/json')
               ->withStatus(201);
         } else{
-            $payload = json_encode(array("mensaje" => "Id Usuario || Id Producto || Id Mesa son INEXISTENTES o la mesa ya esta ocupada"));
+            $payload = json_encode(array("mensaje" => "Id Usuario o Id Producto o Id Mesa no existen o la mesa ya esta ocupada"));
         }
       
       $response->getBody()->write($payload);
@@ -67,7 +68,6 @@ class PedidoController implements IApiUsable
         $id = $args['id'];
         $pedido = Pedido::GetPedidoById($id);
 
-        //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Obteniendo el pedido con id: " . $id);
 
         $payload = json_encode($pedido);
 
@@ -117,19 +117,7 @@ class PedidoController implements IApiUsable
 
     public function BorrarUno($request, $response, $args)
     {
-        $jwtHeader = $request->getHeaderLine('Authorization');
-
-        $id = $args['id'];
-        Pedido::DeletePedido($id);
-          
-        //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Borrando el pedido con id: " . $id);
-          
-        $payload = json_encode(array("mensaje" => "Pedido " .$id. " borrado con exito"));       
-
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json')
-          ->withStatus(200);
+        return null;
     }
 
     public function AgregarProducto($request, $response, $args) {

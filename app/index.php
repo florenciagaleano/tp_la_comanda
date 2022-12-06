@@ -56,19 +56,17 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
 });
 
 //Productos
-/*Necesita estar registrado para crear, modificar o dar de baja un producto*/
+/*Necesita estar registrado para crear un producto*/
 $app->group('/productos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \ProductoController::class . ':TraerTodos');
-  $group->post('/crear', \ProductoController::class . ':CargarUno');
-  $group->put('[/{id}]', \ProductoController::class . ':ModificarUno')->add(\MWPermisos::class . ':VerificarUsuario');
-  $group->delete('/{id}', \ProductoController::class . ':BorrarUno')->add(\MWPermisos::class . ':VerificarUsuario');
+  $group->post('/crear', \ProductoController::class . ':CargarUno')->add(\MWPermisos::class . ':VerificarUsuario');
 });
 
 //Mesas
 /*Necesita ser mesero o socio para crear, modificar o dar de baja un producto*/
 $app->group('/mesas', function (RouteCollectorProxy $group) {
   $group->get('[/]', \MesaController::class . ':TraerTodos');
-  $group->post('/crear', \MesaController::class . ':CargarUno');
+  $group->post('/crear', \MesaController::class . ':CargarUno')->add(\MWPermisos::class . ':VerificarMozoOSocio');
   $group->put('[/{id}]', \MesaController::class . ':ModificarUno')->add(\MWPermisos::class . ':VerificarMozoOSocio');
   $group->delete('/{id}', \MesaController::class . ':BorrarUno')->add(\MWPermisos::class . ':VerificarMozoOSocio');
 });

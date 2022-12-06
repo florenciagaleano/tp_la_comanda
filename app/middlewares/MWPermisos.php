@@ -8,38 +8,6 @@ use Slim\Psr7\Response;
 
 class MWPermisos
 {
-    public static function VerificarPedido(Request $request, RequestHandler $handler)
-    {
-        $jwtHeader = $request->getHeaderLine('Authorization');
-        $token = trim(explode("Bearer", $jwtHeader)[1]);
-
-        $parametros = $request->getParsedBody();
-        $pedido_id = $parametros['pedido_id'];
-
-        try {
-            $user = AutentificadorJWT::ObtenerData($token);
-
-            $order = Pedido::obtenerPedidoPorId($pedido_id);
-
-            if ($user->id != $order->userId || $order == null) {
-                throw new Exception("A este usuario no le corresponde el pedido ingresado.");
-            }
-
-            $response = $handler->handle($request);
-
-            return $response;
-        } catch (Exception $e) {
-
-            $response = new Response();
-
-            $payload = json_encode(array('Error: ' => $e->getMessage()));
-
-            $response->getBody()->write($payload);
-
-            return $response
-            ->withHeader('Content-Type', 'application/json');;
-        }
-    }
 
     public static function VerificarSocio(Request $request, RequestHandler $handler) {
         $jwtHeader = $request->getHeaderLine('Authorization');

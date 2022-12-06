@@ -8,32 +8,17 @@ class Registro
 {
     public $id;
     public $accion;
-    public $createdAt;
+    public $fecha;
 
-    public static function CreateRegistry($userId, $accion) {
+    public static function CrearRegistro($userId, $accion) {
         try {
             $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO historic_accions (user_id, accion, createdAt) VALUES (:user_id, :accion, :createdAt)");
-            $consulta->bindValue(':user_id', $userId, PDO::PARAM_INT);
+            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO registros (usuario_id, accion, fecha) VALUES (:usuario_id, :accion, :fecha)");
+            $consulta->bindValue(':usuario_id', $userId, PDO::PARAM_INT);
             $consulta->bindValue(':accion', $accion, PDO::PARAM_STR);
-            $consulta->bindValue(':createdAt', date("Y-m-d H:i:s"), PDO::PARAM_STR);
+            $consulta->bindValue(':fecha', date("Y-m-d H:i:s"), PDO::PARAM_STR);
             $consulta->execute();
             return $objAccesoDatos->obtenerUltimoId();
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
-    }
-
-    public static function GetTimeLogin() {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM historic_accions WHERE accion = 'Login exitoso'");
-            $consulta->execute();
-            $historicAccions = $consulta->fetchAll(PDO::FETCH_CLASS, "Registro");
-            if (is_null($historicAccions)) {
-                throw new Exception("No existen historic accions");
-            }
-            return $historicAccions;
         } catch (Exception $e) {
             return $e->getMessage();
         }
@@ -42,9 +27,9 @@ class Registro
     public static function GetCantOperacionesPorSector(){
         try {
             $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("SELECT usuarios.area, COUNT(historic_accions.user_id) as total 
+            $consulta = $objAccesoDatos->prepararConsulta("SELECT usuarios.area, COUNT(historic_accions.usuario_id) as total 
             FROM usuarios INNER JOIN historic_accions 
-            ON historic_accions.user_id = usuarios.id 
+            ON historic_accions.usuario_id = usuarios.id 
             GROUP BY usuarios.area
             ORDER BY total DESC");
             $consulta->execute();
@@ -61,9 +46,9 @@ class Registro
     public static function GetCantOperacionesPorUsuario(){
         try {
             $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("SELECT usuarios.username, COUNT(historic_accions.user_id) as total 
+            $consulta = $objAccesoDatos->prepararConsulta("SELECT usuarios.username, COUNT(historic_accions.usuario_id) as total 
             FROM usuarios INNER JOIN historic_accions 
-            ON historic_accions.user_id = usuarios.id 
+            ON historic_accions.usuario_id = usuarios.id 
             GROUP BY usuarios.username
             ORDER BY total DESC");
             $consulta->execute();
@@ -82,9 +67,9 @@ class Registro
         try {
             $objAccesoDatos = AccesoDatos::obtenerInstancia();
             $consulta = $objAccesoDatos->prepararConsulta("SELECT usuarios.username, usuarios.area,
-            COUNT(historic_accions.user_id) as total 
+            COUNT(historic_accions.usuario_id) as total 
             FROM usuarios INNER JOIN historic_accions 
-            ON historic_accions.user_id = usuarios.id 
+            ON historic_accions.usuario_id = usuarios.id 
             GROUP BY usuarios.username, usuarios.area
             ORDER BY total DESC");
             $consulta->execute();
@@ -109,7 +94,7 @@ class Registro
     // const CREATED_AT = 'fecha_creacion';
 
     // public $fillable = [
-    //     'userId', 'accion', 'createdAt'
+    //     'userId', 'accion', 'fecha'
     // ];
 
     // public static function CreateRegistry($userId, $accion)
@@ -117,7 +102,7 @@ class Registro
     //     $registro_acciones = new Registro();
     //     $registro_acciones->userId = $userId;
     //     $registro_acciones->accion = $accion;
-    //     $registro_acciones->createdAt = date('Y-m-d H:i:s');
+    //     $registro_acciones->fecha = date('Y-m-d H:i:s');
     //     $registro_acciones->save();        
     // }
 }

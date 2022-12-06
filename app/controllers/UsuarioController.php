@@ -23,6 +23,7 @@ class UsuarioController implements IApiUsable
         $nuevoUsuario->setArea($area);
 
         $userId = $nuevoUsuario->CrearUsuario();
+        Registro::CrearRegistro($nuevoUsuario->id, "CREAR USUARIO");
 
         $payload = json_encode(array("mensaje" => "Usuario ". $userId. " creado con exito"));
 
@@ -63,14 +64,15 @@ class UsuarioController implements IApiUsable
     
     public function ModificarUno($request, $response, $args)
     {
-        $jwtHeader = $request->getHeaderLine('Authorization');
+      $header = $request->getHeaderLine('Authorization');
+      $token = trim(explode("Bearer", $header)[1]);
 
         $parametros = $request->getParsedBody();
         $id = $args['id'];        
         $area = $parametros['area'];
         
         Usuario::UpdateUser($id, $area);
-        //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Modificando el area del usuario con id: " . $id);
+        Registro::CrearRegistro(AutentificadorJWT::ObtenerData($token)->id, "MODIFICAR USUARIO");
 
         $payload = json_encode(array("mensaje" => "Usuario ".$id." modificado con exito"));
 
@@ -82,20 +84,22 @@ class UsuarioController implements IApiUsable
 
     public function BorrarUno($request, $response, $args)
     {
-        $jwtHeader = $request->getHeaderLine('Authorization');
-        
-        $id = $args['id'];
+      $header = $request->getHeaderLine('Authorization');
+      $token = trim(explode("Bearer", $header)[1]);
 
-        Usuario::LogicalDelete($id);
+      $id = $args['id'];
 
-        //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Borrando el usuario con id: " . $id);
+      Usuario::EliminarUsuario($id);
 
-        $payload = json_encode(array("mensaje" => "Usuario ".$id ." borrado con exito"));
+      Registro::CrearRegistro(AutentificadorJWT::ObtenerData($token)->id, "Borrando el usuario con id: " . $id);
 
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json')
-          ->withStatus(200);
+      $payload = json_encode(array("mensaje" => "Usuario ".$id ." borrado con exito"));
+
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json')
+        ->withStatus(200);
+
     }
 
     public function Login($request, $response, $args) {
@@ -116,7 +120,7 @@ class UsuarioController implements IApiUsable
             'Status' => 'Login success'
           ];
 
-          //HistoricAccions::CreateRegistry($usuario->id, "Login exitoso");
+          Registro::CrearRegistro($usuario->id, "LOGIN");
         } else {
           $message = [
             'Autorizacion' => 'Denegate',

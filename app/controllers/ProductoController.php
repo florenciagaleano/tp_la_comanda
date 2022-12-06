@@ -8,7 +8,9 @@ class ProductoController implements IApiUsable
 {
     public function CargarUno($request, $response, $args)
     {
-       $jwtHeader = $request->getHeaderLine('Authorization');
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+    
 
         $parametros = $request->getParsedBody();
 
@@ -22,8 +24,8 @@ class ProductoController implements IApiUsable
         $nuevoProducto->precio = $precio;
 
         $productId = $nuevoProducto->CrearProducto();
-
-        //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Creando el producto con id: " . $productId);
+        //var_dump($header);
+        Registro::CrearRegistro(AutentificadorJWT::ObtenerData($token)->id, "CREAR PRODUCTO");
         
         $payload = json_encode(array("mensaje" => "Producto ". $productId ." creado con exito"));
 
@@ -38,7 +40,7 @@ class ProductoController implements IApiUsable
         $jwtHeader = $request->getHeaderLine('Authorization');
 
         $id = $args['id'];
-        $producto = Producto::GetProductById($id);
+        $producto = Producto::GetProductoById($id);
         
         $payload = json_encode($producto);
 
@@ -64,39 +66,12 @@ class ProductoController implements IApiUsable
     
     public function ModificarUno($request, $response, $args)
     {
-        $jwtHeader = $request->getHeaderLine('Authorization');
-
-        $parametros = $request->getParsedBody();
-        $id = $args['id'];
-        $precio = $parametros['precio'];
-
-        $productId = Product::UpdateProduct($id, $precio);
-
-        //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Listando todos los productos");
-
-
-        $payload = json_encode(array("mensaje" => "Producto ". $id ." modificado con exito"));
-
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json')
-          ->withStatus(200);
+        return null;
     }
 
     public function BorrarUno($request, $response, $args)
     {
-        $jwtHeader = $request->getHeaderLine('Authorization');
-        $id = $args['id'];
-        Product::DeleteProduct($id);
-
-        $payload = json_encode(array("mensaje" => "Producto ".$id." borrado con exito"));
-
-        //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Borrando el producto con id: " . $id);
-
-        $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json')
-          ->withStatus(200);
+        return null;
     }
 
 }

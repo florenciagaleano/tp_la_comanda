@@ -1,6 +1,6 @@
 <?php
 
-// use App\Models\HistoricAccions;
+require_once './models/Registro.php';
 // use App\Models\Mesa;
 
 require_once './interfaces/IApiUsable.php';
@@ -10,7 +10,8 @@ class MesaController extends Mesa implements IApiUsable
 {
   public function CargarUno($request, $response, $args)
   {
-    $jwtHeader = $request->getHeaderLine('Authorization');
+    $header = $request->getHeaderLine('Authorization');
+    $token = trim(explode("Bearer", $header)[1]);
 
     $parametros = $request->getParsedBody();
     $nroMesa = $parametros['nro_mesa'];
@@ -22,7 +23,7 @@ class MesaController extends Mesa implements IApiUsable
 
     $mesaId = $nuevaMesa->CrearMesa();
 
-    //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Creando la mesa con id: " . $mesaId);
+    Registro::CrearRegistro(AutentificadorJWT::ObtenerData($token)->id, "CREAR MESA");
 
     $payload = json_encode(array("mensaje" => "Mesa " . $mesaId . " creada con exito"));
 
@@ -38,8 +39,6 @@ class MesaController extends Mesa implements IApiUsable
 
     $id = $args['id'];
     $mesa = Mesa::GetMesaById($id);
-
-    //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Obteniendo la mesa con id: " . $id);
 
     $payload = json_encode($mesa);
 
@@ -68,41 +67,12 @@ class MesaController extends Mesa implements IApiUsable
 
   public function ModificarUno($request, $response, $args)
   {
-    $jwtHeader = $request->getHeaderLine('Authorization');
-    $parametros = $request->getParsedBody();
-
-    $id = $args['id'];
-    $mesa_status = $parametros['mesa_status'];
-
-    $mesa = Mesa::GetMesaById($id);
-    if ($mesa->ValidStatus($mesa_status)) {
-      Mesa::UpdateMesa($id, $mesa_status);
-      //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Modificando la mesa con id: " . $id);
-    }
-
-    $payload = json_encode(array("mensaje" =>  "Mesa " . $id . " modificada con exito"));
-
-    $response->getBody()->write($payload);
-    return $response
-      ->withHeader('Content-Type', 'application/json')
-      ->withStatus(200);
+    return null;
   }
 
   public function BorrarUno($request, $response, $args)
   {
-    $jwtHeader = $request->getHeaderLine('Authorization');
-    $id = $args['id'];
-
-    $mesaId = Mesa::DeleteMesa($id);
-
-    //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Borrando la mesa con id: " . $id);
-
-    $payload = json_encode(array("mensaje" => "Mesa " . $id . " borrada con exito"));
-
-    $response->getBody()->write($payload);
-    return $response
-      ->withHeader('Content-Type', 'application/json')
-      ->withStatus(200);
+    return null;
   }
 /*
   public function ConsultaMesas($request, $response, $args)

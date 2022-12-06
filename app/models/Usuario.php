@@ -107,7 +107,7 @@ class Usuario {
         }
     }
 
-    public static function LogicalDelete($id) {
+    public static function EliminarUsuario($id) {
         try {
             $objAccesoDatos = AccesoDatos::obtenerInstancia();
             $consulta = $objAccesoDatos->prepararConsulta("UPDATE usuario SET fecha_eliminacion = NOW(), estado = :estado WHERE id = :id");            
