@@ -96,6 +96,13 @@ class Producto
         return $consulta->rowCount();
     }
 
+    public static function GetProductosPorPedidoId($idPedido) {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("DELETE FROM producto WHERE id =:id");
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+        $consulta->execute();
+        return $consulta->rowCount();
+    }
 
 }
 

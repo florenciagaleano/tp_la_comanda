@@ -5,6 +5,21 @@ use Fpdf\Fpdf;
 
 class EncuestaController {
 
+    public function GetMejores($request, $response, $args)
+    {
+      $jwtHeader = $request->getHeaderLine('Authorization');
+  
+      $mesas = Encuesta::traerMejores();
+  
+  
+      $payload = json_encode(array("mesas" => $mesas));
+
+      $response->getBody()->write($payload);
+      return $response
+        ->withHeader('Content-Type', 'application/json')
+        ->withStatus(200);
+      }
+
     public function EndpointWriteCSV($request, $response, $args) {
         
         $encuestas = Encuesta::GetEncuestas();

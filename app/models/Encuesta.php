@@ -31,6 +31,19 @@ class Encuesta
         return $objAccesoDatos->obtenerUltimoId();
     }
 
+    public static function traerMejores(){
+        try {
+            $objAccesoDatos = AccesoDatos::obtenerInstancia();
+            $consulta = $objAccesoDatos->prepararConsulta("SELECT e.id_mesa,e.puntaje_total,e.puntaje_mozo,e.puntaje_chef,e.comentarios FROM encuesta e where puntaje_total > 7");
+            $consulta->execute();
+            $mesa = $consulta->fetchObject();
+
+            return $mesa;
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
+
+    }
 
     public static function GetEncuestas() {
         try {
@@ -48,19 +61,5 @@ class Encuesta
         }
     }
 
-    public static function GetMesaMejorYPeorComentario($orderBy) {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM surveys ORDER BY puntaje_total " . $orderBy . " LIMIT 1");
-            $consulta->execute();
-            $survies = $consulta->fetchObject("Survery");
-            if (is_null($survies)) {
-                throw new Exception("No existen encuestas");
-            }            
-            return $survies;
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }             
-     }
     
 }

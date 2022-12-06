@@ -70,9 +70,11 @@ $app->group('/productos', function (RouteCollectorProxy $group) {
 $app->group('/mesas', function (RouteCollectorProxy $group) {
   $group->get('[/]', \MesaController::class . ':TraerTodos');
   $group->post('/crear', \MesaController::class . ':CargarUno')->add(\MWPermisos::class . ':VerificarMozoOSocio');
-  $group->put('[/{id}]', \MesaController::class . ':ModificarUno')->add(\MWPermisos::class . ':VerificarMozoOSocio');
-  $group->delete('/{id}', \MesaController::class . ':BorrarUno')->add(\MWPermisos::class . ':VerificarMozoOSocio');
+  $group->post('/cerrar/{id}', \MesaController::class . ':Cerrar')->add(\MWPermisos::class . ':VerificarSocio');
+  $group->get('/masusada', \MesaController::class . ':TraerMesaMasUsada');
+
 });
+
 
 //Pedidos
 /*Necesita ser chef mozo o bartender para mdificar pedidos. Para ver pedidos por estado Necesita estar registrado*/
@@ -83,6 +85,9 @@ $app->group('/pedidoss', function (RouteCollectorProxy $group) {
   $group->post('/agregarproducto', \PedidoController::class . ':AgregarProducto');
   $group->post('/estado/{pedidoId}', \PedidoController::class . ':ModificarEstadoPedido')->add(\MWPermisos::class . ':VerificarChefMozoOBartender');
   $group->get('/getbyestado', \PedidoController::class . ':TraerTodosSegunEstado')->add(\MWPermisos::class . ':VerificarUsuario');
+  $group->get('/gettiemporestante', \PedidoController::class . ':ConsultarTiempoRestante');
+  $group->post('/cobrar', \PedidoController::class . ':Cobrar')->add(\MWPermisos::class . ':VerificarChefMozoOBartender');
+  $group->get('/pedidostarde', \PedidoController::class . ':GetPedidosFueraDeTiempo')->add(\MWPermisos::class . ':VerificarSocio');
 
 });
 
@@ -96,6 +101,7 @@ $app->group('/encuestas', function (RouteCollectorProxy $group) {
   $group->get('/writecsv', \EncuestaController::class . ':EndpointWriteCSV');
   $group->get('/readcsv', \EncuestaController::class . ':EndpointReadCSV');
   $group->get('/pdf', \EncuestaController::class . ':EndpointCrearPDF');
+  $group->get('/mejores', \EncuestaController::class . ':GetMejores');
 
 });
 

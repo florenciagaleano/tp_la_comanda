@@ -8,6 +8,28 @@ require_once './models/Mesa.php';
 
 class MesaController extends Mesa implements IApiUsable
 {
+  public function Cerrar($request, $response, $args)
+  {
+    $jwtHeader = $request->getHeaderLine('Authorization');
+
+    $id = $args['id'];
+    
+    if(!Mesa::CerrarMesa($id)){
+      $payload = json_encode(array("mensaje" => "Mesa cerrada")); 
+    }else{
+      $payload = json_encode(array("mensaje" => "El cliente todavia no pago"));
+
+    }
+
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json')
+      ->withStatus(200);
+
+  }
+
+
+
   public function CargarUno($request, $response, $args)
   {
     $header = $request->getHeaderLine('Authorization');
@@ -48,6 +70,19 @@ class MesaController extends Mesa implements IApiUsable
       ->withStatus(200);
   }
 
+  public function TraerMesaMasUsada($request, $response, $args)
+  {
+    $jwtHeader = $request->getHeaderLine('Authorization');
+
+    $mesa = Mesa::GetMesaMasUsada();
+
+    $payload = json_encode($mesa);
+
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json')
+      ->withStatus(200);
+  }
 
   public function TraerTodos($request, $response, $args)
   {
@@ -70,87 +105,11 @@ class MesaController extends Mesa implements IApiUsable
     return null;
   }
 
+
   public function BorrarUno($request, $response, $args)
   {
     return null;
   }
-/*
-  public function ConsultaMesas($request, $response, $args)
-  {
-    $consulta = $args['consulta'];
-    $payload = "";
 
-    switch ($consulta) {
-      case 'MesaMasUsada':
-        $idMesaMasUsada = Order::GetMesaWithMoreAndLessOrders("DESC");
-        $mesa = Mesa::GetMesaByMesaNumber($idMesaMasUsada->mesa_id);
-        $payload = json_encode(array("mesa" => $mesa));
-        break;
-      case 'MesaMenosUsada':
-        $idMesaMasUsada = Order::GetMesaWithMoreAndLessOrders("ASC");
-        $mesa = Mesa::GetMesaByMesaNumber($idMesaMasUsada->mesa_id);
-        $payload = json_encode(array("mesa" => $mesa));
-        break;
-      case 'MesaMejoresComentarios':        
-        $idMesaBestScore = Survery::GetMesaMejorYPeorComentario("DESC");
-        $mesa = Mesa::GetMesaByMesaNumber($idMesaBestScore->id_mesa);
-        $payload = json_encode(array("mesa" => $mesa));
-        break;
-      case 'MesaPeoresComentarios':
-        $idMesaBestScore = Survery::GetMesaMejorYPeorComentario("ASC");
-        $mesa = Mesa::GetMesaByMesaNumber($idMesaBestScore->id_mesa);
-        $payload = json_encode(array("mesa" => $mesa));
-        break;
-      case 'MasFacturo':
-        $mesaMasFacturo = Order::GetMesaNumberMoreAndLessPrice("DESC");
-        $mesa = Mesa::GetMesaByMesaNumber($mesaMasFacturo);
-        $payload = json_encode(array("mesa" => $mesa));
-        break;
-      case 'MenosFacturo':
-        $mesaMenosFacturo = Order::GetMesaNumberMoreAndLessPrice("ASC");
-        $mesa = Mesa::GetMesaByMesaNumber($mesaMenosFacturo);
-        $payload = json_encode(array("mesa" => $mesa));
-        break;
-      case 'MayorImporte':
-        $mesaMaxImporte = Order::GetMesaNumberMoreFinalPrice();
-        $mesa = Mesa::GetMesaByMesaNumber($mesaMaxImporte);
-        $payload = json_encode(array("mesa" => $mesa));
-        break;
-      case 'MenorImporte':
-        $mesaMinImporte = Order::GetMesaNumberLessFinalPrice();
-        $mesa = Mesa::GetMesaByMesaNumber($mesaMinImporte);
-        $payload = json_encode(array("mesa" => $mesa));
-        break;
-      default:
-        $lista = "Error, ingresar valor valido";
-        break;
-    }
-
-    $response->getBody()->write($payload);
-    return $response
-      ->withHeader('Content-Type', 'application/json')
-      ->withStatus(200);
-  }
-
-
-  public function ConsultaMesasFecha($request, $response, $args)
-  {
-    $mesas = array();
-
-    $fechaInicio = date($args['fechaInicio']);
-    $fechaFin = date($args['fechaFin']);
-    $mesaImporteEntreDosFechas = Order::GetOrdersBetweenDates($fechaInicio, $fechaFin);    
-    
-    for ($i=0; $i < count($mesaImporteEntreDosFechas) ; $i++) { 
-      $mesa = Mesa::GetMesaByMesaNumber($mesaImporteEntreDosFechas[$i]->mesa_id);
-      array_push($mesas, $mesa);
-    }
-
-    $payload = json_encode(array("mesas" => $mesas));
-
-    $response->getBody()->write($payload);
-    return $response
-      ->withHeader('Content-Type', 'application/json')
-      ->withStatus(200);
-  }*/
+  
 }

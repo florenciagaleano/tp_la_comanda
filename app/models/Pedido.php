@@ -1,7 +1,7 @@
 <?php
 
 // namespace App\Models;
-//require_once './Table.php';
+require_once 'Mesa.php';
 
 // use Exception;
 // use Illuminate\Database\Eloquent\Model;
@@ -52,11 +52,11 @@ class Pedido
         }
     }
 
-    public function AgregarProducto($idProducto){
+    public static function AgregarProducto($idProducto, $idPedido){
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedido_producto (id_pedido,id_producto) 
         VALUES (:id_pedido, :id_producto)");
-        $consulta->bindValue(':id_pedido', $this->id, PDO::PARAM_INT);
+        $consulta->bindValue(':id_pedido', $idPedido, PDO::PARAM_INT);
         $consulta->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
 
         try{
@@ -93,19 +93,14 @@ class Pedido
                 $consulta->bindValue(':tiempo_estimado', (int)$tiempo_estimado, PDO::PARAM_INT);
                 $consulta->bindValue(':id', $id, PDO::PARAM_INT);
                 $consulta->execute();
-            }else{
-                $consulta = $objAccesoDato->prepararConsulta("UPDATE pedido SET estado = :estado WHERE id = :id");
+            }else if($estado == 'listo para servir'){
+                $consulta = $objAccesoDato->prepararConsulta("UPDATE pedido SET estado = :estado, fecha_finalizacion = NOW() WHERE id = :id");
                 $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+                //$consulta->bindValue(':fecha', $id, PDO::PARAM_INT);
                 $consulta->bindValue(':id', $id, PDO::PARAM_INT);
                 $consulta->execute();
+                Mesa::ActualizarEstado((Pedido::GetPedidoById($id))->mesa_id, "con cliente comiendo");
             }
-        }
-
-        if($estado == 'listo para servir'){
-            $consulta = $objAccesoDato->prepararConsulta("UPDATE pedido SET fecha_finalizacion = :fecha_finalizacion WHERE id = :id");
-            $consulta->bindValue(':fecha_finalizacion', date("Y-m-d H:i:s"), PDO::PARAM_STR);
-            $consulta->bindValue(':id', $id, PDO::PARAM_INT);
-            $consulta->execute();
         }
     }
 
@@ -137,18 +132,18 @@ class Pedido
         }
     }
 
-    public static function GetPedidoByTableNumber($nro_pedido, $tableNumber) {
+    public static function GetPedidoByMesa($nro_pedido, $tableNumber) {
         
             $objAccesoDatos = AccesoDatos::obtenerInstancia();
             $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM pedido WHERE nro_pedido = :nro_pedido AND mesa_id = :mesa_id");
             $consulta->bindValue(':nro_pedido', $nro_pedido, PDO::PARAM_INT);
             $consulta->bindValue(':mesa_id', $tableNumber, PDO::PARAM_INT);
             $consulta->execute();
-            $order = $consulta->fetchObject("Pedido");            
-            if (!$order) {                
+            $pedido = $consulta->fetchObject("Pedido");            
+            if (!$pedido) {                
                 throw new Exception("No existe el pedido con la mesa " . $tableNumber);
             } 
-            return $order;
+            return $pedido;
         
     }
 
@@ -158,7 +153,7 @@ class Pedido
             $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM pedido WHERE nro_pedido = :nro_pedido");
             $consulta->bindValue(':nro_pedido', $nro_pedido, PDO::PARAM_STR);
             $consulta->execute();
-            $pedidos = $consulta->fetchAll(PDO::FETCH_CLASS, "Pedido");
+            $pedidos = $consulta->fetchObject("Pedido");
             if (is_null($pedidos)) {
                 throw new Exception("No existe el pedido con el numero de pedido " . $nro_pedido);
             }
@@ -168,146 +163,6 @@ class Pedido
         }
     }
 
-    public static function GetTableNumberMoreAndLessPrice($orderBy){
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("SELECT mesa_id, SUM(precio_final) AS total 
-            FROM pedido WHERE estado != 'CANCELADO' 
-            GROUP BY mesa_id 
-            ORDER BY total " . $orderBy . " LIMIT 1");    
-            $consulta->execute();
-            $table = $consulta->fetchAll(PDO::FETCH_CLASS, "Pedido");
-            if (is_null($table)) {
-                throw new Exception("No existen pedidos");
-            }            
-            return $table[0]->mesa_id;
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
-    }
-
-    public static function GetTableNumberMoreFinalPrice() {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("SELECT mesa_id FROM pedido ORDER BY precio_final DESC LIMIT 1;");
-            $consulta->execute();
-            $table = $consulta->fetchAll(PDO::FETCH_CLASS, "Pedido");
-            if (is_null($table)) {
-                throw new Exception("No existen pedidos");
-            }            
-            return $table[0]->mesa_id;
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
-    }
-
-    public static function GetTableNumberLessFinalPrice() {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("SELECT mesa_id
-            FROM pedido
-            WHERE estado != 'CANCELADO' AND precio_final > 0
-            ORDER BY precio_final ASC LIMIT 1;");
-            $consulta->execute();
-            $table = $consulta->fetchAll(PDO::FETCH_CLASS, "Pedido");
-            if (is_null($table)) {
-                throw new Exception("No existen pedidos");
-            }            
-            return $table[0]->mesa_id;
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
-    }
-
-    public static function GetPedidosBetweenDates($startDate, $endDate) {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM ordpedidoers WHERE fecha_finalizacion BETWEEN :startDate AND :endDate");
-            $consulta->bindValue(':startDate', $startDate, PDO::PARAM_STR);
-            $consulta->bindValue(':endDate', $endDate, PDO::PARAM_STR);
-            $consulta->execute();
-            $tables = $consulta->fetchAll(PDO::FETCH_CLASS, "Pedido");
-            if (is_null($tables)) {
-                throw new Exception("No existen pedidos");
-            }
-            return $tables;
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
-    }
-
-    public static function UpdateUserAndTable($id, $mesa_id, $usuario_id, $newFileName) {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedido SET mesa_id = :mesa_id, usuario_id = :usuario_id, imagen = :imagen WHERE id = :id");
-            $consulta->bindValue(':id', $id, PDO::PARAM_INT);
-            $consulta->bindValue(':mesa_id', $mesa_id, PDO::PARAM_INT);
-            $consulta->bindValue(':usuario_id', $usuario_id, PDO::PARAM_INT);
-            $consulta->bindValue(':imagen', $newFileName, PDO::PARAM_STR);
-            $consulta->execute();
-            return $objAccesoDatos->obtenerUltimoId();
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
-    }
-
-    public static function UpdatePedidoChef($nro_pedido, $estado, $tiempo_estimado) {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedido SET estado = :estado, tiempo_estimado = :tiempo_estimado WHERE nro_pedido = :nro_pedido");            
-            $consulta->bindValue(':nro_pedido', $nro_pedido, PDO::PARAM_INT);
-            $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
-            $consulta->bindValue(':tiempo_estimado', $tiempo_estimado, PDO::PARAM_STR);
-            $consulta->execute();
-            return $objAccesoDatos->obtenerUltimoId();
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
-    }
-
-    public static function UpdatePedidoWaitress($nro_pedido, $estado) {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedido SET estado = :estado,
-            fecha_finalizacion = :fecha_finalizacion WHERE nro_pedido = :nro_pedido");
-            $consulta->bindValue(':nro_pedido', $nro_pedido, PDO::PARAM_INT);
-            $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
-            $consulta->bindValue(':fecha_finalizacion', date("Y-m-d H:i:s"), PDO::PARAM_STR);
-            $consulta->execute();
-    } catch (Exception $e) {
-            return $e->getMessage();
-        }
-    }
- 
-    public static function SetPrice($nro_pedido, $precio_final) {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedido SET precio_final = :precio_final WHERE nro_pedido = :nro_pedido");
-            $consulta->bindValue(':nro_pedido', $nro_pedido, PDO::PARAM_INT);
-            $consulta->bindValue(':precio_final', $precio_final, PDO::PARAM_STR);
-            $consulta->execute();
-            return $objAccesoDatos->obtenerUltimoId();
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
-    }
-
-    public static function GetTableWithMoreAndLessPedidos($orderBy) {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("SELECT mesa_id, COUNT(*) AS pedido 
-            FROM pedido GROUP BY mesa_id ORDER BY pedido ". $orderBy. " LIMIT 1");
-            $consulta->execute();
-            $table = $consulta->fetchObject("Table");
-            if (is_null($table)) {
-                throw new Exception("No existen mesas con pedidos");
-            }
-            
-            return $table;
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
-    }
     
     public function GuardarImagen() {
         $mover =  move_uploaded_file($this->imagen["tmp_name"], $this->CrearDestino());
@@ -324,17 +179,51 @@ class Pedido
         return $destino;
     }
 
+    public static function Cobrar($idPedido){
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT SUM(p.precio) from producto p inner join pedido_producto pp on p.id = pp.id_producto
+        inner join pedido pd on pp.id_pedido = pd.id where pd.id = :id");
+        $consulta->bindValue(':id', $idPedido, PDO::PARAM_STR);
+        $consulta->execute();
+        //var_dump($consulta->fetchColumn());
+        $precio = intval($consulta->fetchColumn());
 
-    public static function FindAndChangePictureName($actualDir, $nro_pedido, $mesa_id) {
-        try {
-            $newFileName = $nro_pedido . "_" . $mesa_id;
-            $newDir = "./images/".$newFileName.".jpg";
-            rename($actualDir, $newDir);            
-            return $newDir;
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
+        Pedido::setPrecioFinal($precio, $idPedido);
+        //var_dump((Pedido::GetPedidoById($idPedido))->mesa_id);
+        Mesa::ActualizarEstado((Pedido::GetPedidoById($idPedido))->mesa_id, "con cliente pagando");
+
+        return $precio;
+}
+
+    private static function setPrecioFinal($precio,$idPedido){
+        //var_dump($idPedido);
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedido SET precio_final = :precio_final WHERE id = :id");
+        $consulta->bindValue(':id', $idPedido, PDO::PARAM_STR);
+        $consulta->bindValue(':precio_final', $precio, PDO::PARAM_STR);
+
+        $consulta->execute();
     }
+
+    public static function TraerPedidosFueraDeTiempo() {
+        $list = array();
+        $pedidos = Pedido::GetPedidos();
+        foreach ($pedidos as $pedido) {
+          $tiempo_estimado = intval($pedido->tiempo_estimado);
+    
+          //calculo la diferencia en minutos entre fecha_creacion y finishedAT
+          $fecha_creacion = new DateTime($pedido->fecha_creacion);
+          $fecha_finalizacion = new DateTime($pedido->fecha_finalizacion);
+          $diff = $fecha_creacion->diff($fecha_finalizacion);
+          //paso la diferencia de horas a minutos
+          $minutes = $diff->h * 60 + $diff->i;
+          if($fecha_finalizacion != null && $tiempo_estimado != null &&$minutes > $tiempo_estimado) {
+            array_push($list, $pedido);
+          }
+        }
+        return $list;
+      }
+    
 }
 
 ?>

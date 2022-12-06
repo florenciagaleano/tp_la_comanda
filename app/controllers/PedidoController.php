@@ -34,18 +34,18 @@ class PedidoController implements IApiUsable
 
         var_dump($mesa);
         
-        if(!is_null($mesa) && !is_null($usuario) && $mesa->estado == 'vacia'){
+        if(!is_null($mesa) && !is_null($usuario) && ($mesa->estado == 'vacia' || $mesa->estado == 'cerrada')){
             $nuevoPedido = new Pedido();
             $nuevoPedido->usuario_id = $usuarioId;
             //$nuevoPedido->producto_id = $productoId;
             $nuevoPedido->mesa_id = $mesa->id;
-            $nuevoPedido->estado = "en preparacion";
+            $nuevoPedido->estado = "pendiente";
             $nuevoPedido->nro_pedido = rand(1, 100000);
             $nuevoPedido->imagen = $_FILES['imagen'];
             $nuevoPedido->nombre_cliente = $nombreCliente;
 
             $pedido = $nuevoPedido->CrearPedido();
-            $mesa = Mesa::ActualizarEstado($mesaId, 'con cliente esperando pedido');
+            $mesa = Mesa::ActualizarEstado($nuevoPedido->mesa_id, 'con cliente esperando pedido');
 
             Registro::CrearRegistro(AutentificadorJWT::ObtenerData($token)->id, "CREAR PEDIDO");
 
@@ -133,7 +133,7 @@ class PedidoController implements IApiUsable
         //var_dump($pedido);
         if(!is_null($pedido) && !is_null($product)) {
 
-          $pedido->AgregarProducto($productoId);
+          $pedido->AgregarProducto($productoId,$pedidoId);
           //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, ("Agregando el producto " . $product->productName . " al pedido " . strval($pedido->pedidoNumber)));
             $payload = json_encode(array("mensaje" => "Producto agregado al pedido con exito"));
             $response->getBody()->write($payload);
@@ -186,19 +186,17 @@ class PedidoController implements IApiUsable
   }
 
   public function ConsultarTiempoRestante($request, $response, $args) {
-    $jwtHeader = $request->getHeaderLine('Authorization');
-
-    $pedidonumber = $args['pedidonumber'];
-    $mesanumber = $args['mesanumber'];
-
-    $pedido = Pedido::GetPedidoByTableNumber($pedidonumber, $mesanumber);
+   // $jwtHeader = $request->getHeaderLine('Authorization');
+    $parametros = $request->getParsedBody();
+    $nro_pedido = $parametros['nro_pedido'];
+    $pedido = Pedido::GetPedidoByPedidoNumber($nro_pedido);
     //var_dump($pedido);
 
-    if(is_null($pedido->estimatedTime)) {
+    if(is_null($pedido->tiempo_estimado)) {
       throw new Exception("El pedido no esta en preparacion");	
     } else {
       //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, "Consultando el tiempo restante del pedido " . $pedidonumber);
-      $payload = json_encode(array("Tiempo estimado" => $pedido->estimatedTime));
+      $payload = json_encode(array("Tiempo estimado" => $pedido->tiempo_estimado));
     } 
 
     $response->getBody()->write($payload);
@@ -207,63 +205,40 @@ class PedidoController implements IApiUsable
       ->withStatus(200);
   }
 
-  public function ConsultaPedidos ($request, $response, $args) {
 
-    $consulta = $args['consulta'];
-    $payload = "";
+  public static function Cobrar($request, $response, $args) {
+    
+    $jwtHeader = $request->getHeaderLine('Authorization');
+    $parametros = $request->getParsedBody();
 
-    switch ($consulta) {
-      case 'LoMasPedido':
-        $idProductoMasVendido = Pedido::GetLoMasYMenosVendido("DESC");
-        $product = Product::GetProductById($idProductoMasVendido);
-        $payload = json_encode(array("producto" => $product->productName));
-        break;
-      case 'LoMenosPedido':
-        $idProductoMenosVendido = Pedido::GetLoMasYMenosVendido("ASC");
-        $product = Product::GetProductById($idProductoMenosVendido);
-        $payload = json_encode(array("producto" => $product->productName));        
-        break;
-      case 'PedidosFueraDeTiempo':
-        $pedidos = Pedido::GetPedidosByStatus('servido');
-        $pedidosFueraDeTiempo = PedidoController::CalculateEstimatedTime($pedidos);
-        $payload = json_encode(array("pedidos" => $pedidosFueraDeTiempo));
-        break;
-      case 'PedidosCancelados':
-        $pedidos = Pedido::GetPedidosByStatus('CANCELADO');
-        $payload = json_encode(array("pedidos" => $pedidos));
-        break;
-      case 'ReporteMensual':
-        $fechaActual = date('Y-m-d');        
-        $fechaPrevia = date('Y-m-d', strtotime('-1 month'));
-        //var_dump($fechaPrevia);
-        $pedidos = Pedido::GetPedidosBetweenDates($fechaPrevia, $fechaActual);
-        $payload = json_encode(array("pedidos" => $pedidos));
-        //var_dump($pedidos);
-      }   
+
+    $pedidoId = $parametros['pedido_id'];
+    $precio = Pedido::Cobrar($pedidoId);
+
+    $payload = json_encode(array("mensaje" => "Precio final: " .$precio));
 
     $response->getBody()->write($payload);
     return $response
       ->withHeader('Content-Type', 'application/json')
-      ->withStatus(200);
-  }
+      ->withStatus(200);        
+}
 
-  private static function CalculateEstimatedTime($pedidos) {
-    $list = array();
-    foreach ($pedidos as $pedido) {
-      $estimatedTime = intval($pedido->estimatedTime);
+public static function GetPedidosFueraDeTiempo($request, $response, $args) {
+    
+  $jwtHeader = $request->getHeaderLine('Authorization');
+  $parametros = $request->getParsedBody();
 
-      //calculo la diferencia en minutos entre createdAt y finishedAT
-      $createdAt = new DateTime($pedido->createdAt);
-      $finishedAt = new DateTime($pedido->finishAt);
-      $diff = $createdAt->diff($finishedAt);
-      //paso la diferencia de horas a minutos
-      $minutes = $diff->h * 60 + $diff->i;
-      if($minutes > $estimatedTime) {
-        array_push($list, $pedido);
-      }
-    }
-    return $list;
-  }
+
+  //$pedidoId = $parametros['pedido_id'];
+  $pedidos = Pedido::TraerPedidosFueraDeTiempo();
+
+  $payload = json_encode(array("pedidos" => $pedidos));
+
+  $response->getBody()->write($payload);
+  return $response
+    ->withHeader('Content-Type', 'application/json')
+    ->withStatus(200);        
+}
 
 }
 ?>

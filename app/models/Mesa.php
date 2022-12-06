@@ -64,6 +64,19 @@ class Mesa  {
         }
     }
 
+    public static function GetMesaMasUsada() {
+        try {
+            $objAccesoDatos = AccesoDatos::obtenerInstancia();
+            $consulta = $objAccesoDatos->prepararConsulta("SELECT m.id,m.nro_mesa,m.estado, COUNT(*) as pedidos from mesa m inner join pedido p on p.mesa_id= m.id  GROUP BY mesa_id ORDER BY pedidos desc LIMIT 1");
+            $consulta->execute();
+            $mesa = $consulta->fetchObject("Mesa");
+
+            return $mesa;
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
     public static function GetMesaByMesaNumero($nro_mesa) {
         try {            
             $objAccesoDatos = AccesoDatos::obtenerInstancia();
@@ -80,26 +93,31 @@ class Mesa  {
         }
     }
 
-    public static function ActualizarEstado($nro_mesa, $estado) {
+    public static function ActualizarEstado($id, $estado) {
         try {
             $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("UPDATE mesa SET estado = :estado WHERE nro_mesa = :nro_mesa");
+            $consulta = $objAccesoDatos->prepararConsulta("UPDATE mesa SET estado = :estado WHERE id = :id");
             $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
-            $consulta->bindValue(':nro_mesa', $nro_mesa, PDO::PARAM_INT);
+            $consulta->bindValue(':id', $id, PDO::PARAM_INT);
             $consulta->execute();
-            return $objAccesoDatos->obtenerUltimoId();
+           // var_dump($estado);            var_dump($id
+           return $consulta->rowCount();
+
         } catch (Exception $e) {
             return $e->getMessage();
         }
     }
 
-    public static function DeleteMesa($id) {
+    public static function CerrarMesa($id) {
         try {
+            if((Mesa::GetMesaById($id))->estado == "con cliente pagando"){
             $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("UPDATE mesa set estado = 'DELETED' WHERE id = :id");
+            $consulta = $objAccesoDatos->prepararConsulta("UPDATE mesa set estado = 'cerrada' WHERE id = :id");
             $consulta->bindValue(':id', $id, PDO::PARAM_INT);
             $consulta->execute();
-            return $objAccesoDatos->obtenerUltimoId();
+            //var_dump($consulta->rowCount());
+            return $consulta->rowCount();
+            }
         } catch (Exception $e) {
             return $e->getMessage();
         }
