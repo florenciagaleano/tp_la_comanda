@@ -19,6 +19,7 @@ require_once './controllers/UsuarioController.php';
 require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
+require_once './controllers/EncuenstaController.php';
 require_once './controllers/ArchivoController.php';
 require_once './middlewares/MWPermisos.php';
 
@@ -88,6 +89,14 @@ $app->group('/archivos', function (RouteCollectorProxy $group) {
   $group->get('/registro', \ArchivoController::class . ':VerRegistroLogin');
 
 });
+
+$app->group('/encuestas', function (RouteCollectorProxy $group) {
+  $group->post('/crear', \EncuestaController::class . ':CrearEncuesta');
+  $group->get('/writecsv', \EncuestaController::class . ':EndpointWriteCSV');
+  $group->get('/readcsv', \EncuestaController::class . ':EndpointReadCSV');
+
+});
+
 
 $app->group('/jwt', function (RouteCollectorProxy $group) {
 

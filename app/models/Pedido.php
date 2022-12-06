@@ -115,7 +115,7 @@ class Pedido
 
     public static function GetPedidoById($id) {
         $id = intval($id);
-        var_dump($id);
+        //var_dump($id);
 
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM pedido WHERE id = :id");
