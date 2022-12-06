@@ -23,22 +23,23 @@ class PedidoController implements IApiUsable
 
         $mesaId = $parametros['nro_mesa'];
         $usuarioId = $parametros['usuario_id'];
-        $productoId = $parametros['producto_id'];
+        //$productoId = $parametros['producto_id'];
         $nombreCliente = $parametros['nombre_cliente'];
         $estado = 'pendiente';
 
         $mesa = Mesa::GetMesaByMesaNumero($mesaId);
         $usuario = Usuario::GetUsuarioById($usuarioId);
-        $product = Producto::GetProductoById($productoId);
+        //$product = Producto::GetProductoById($productoId);
+       // var_dump($_FILES['imagen']);
 
-        //var_dump($mesa);
-
-        if(!is_null($mesa) && !is_null($usuario) && !is_null($product) && $mesa->estado == 'vacia'){
+        var_dump($mesa);
+        
+        if(!is_null($mesa) && !is_null($usuario) && $mesa->estado == 'vacia'){
             $nuevoPedido = new Pedido();
             $nuevoPedido->usuario_id = $usuarioId;
-            $nuevoPedido->producto_id = $productoId;
+            //$nuevoPedido->producto_id = $productoId;
             $nuevoPedido->mesa_id = $mesa->id;
-            $nuevoPedido->estado = $estado;
+            $nuevoPedido->estado = "en preparacion";
             $nuevoPedido->nro_pedido = rand(1, 100000);
             $nuevoPedido->imagen = $_FILES['imagen'];
             $nuevoPedido->nombre_cliente = $nombreCliente;
@@ -131,16 +132,8 @@ class PedidoController implements IApiUsable
         $product = Producto::GetProductoById($productoId);
         //var_dump($pedido);
         if(!is_null($pedido) && !is_null($product)) {
-          $nuevoPedido = new Pedido();
-          $nuevoPedido->usuario_id = $pedido->usuario_id;
-          $nuevoPedido->producto_id = $productoId;
-          $nuevoPedido->mesa_id = $pedido->mesa_id;
-          $nuevoPedido->estado = $pedido->estado;
-          $nuevoPedido->nro_pedido = rand(1, 100000);
-          $nuevoPedido->imagen = null;
-          $nuevoPedido->nombre_cliente = $pedido->nombre_cliente;
 
-          $nuevoPedido->CrearPedido();
+          $pedido->AgregarProducto($productoId);
           //HistoricAccions::CreateRegistry(AutentificadorJWT::GetTokenData($jwtHeader)->id, ("Agregando el producto " . $product->productName . " al pedido " . strval($pedido->pedidoNumber)));
             $payload = json_encode(array("mensaje" => "Producto agregado al pedido con exito"));
             $response->getBody()->write($payload);
@@ -196,7 +189,7 @@ class PedidoController implements IApiUsable
     $pedidonumber = $args['pedidonumber'];
     $mesanumber = $args['mesanumber'];
 
-    $pedido = Pedido::GetPedidoByMesaNumber($pedidonumber, $mesanumber);
+    $pedido = Pedido::GetPedidoByTableNumber($pedidonumber, $mesanumber);
     //var_dump($pedido);
 
     if(is_null($pedido->estimatedTime)) {

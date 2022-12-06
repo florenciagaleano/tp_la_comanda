@@ -13,7 +13,7 @@ class Pedido
     public $id;
     public $mesa_id;
     public $usuario_id;
-    public $producto_id;
+    //public $producto_id;
     public $estado;
     public $fecha_creacion;
     public $tiempo_estimado;
@@ -30,11 +30,11 @@ class Pedido
             if($this->imagen != null) {
                 $imagenGuardar = $this->GuardarImagen();            
             }
-            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedido (mesa_id, usuario_id, producto_id, estado, fecha_creacion, precio_final, nro_pedido, imagen, nombre_cliente) 
-            VALUES (:mesa_id, :usuario_id, :producto_id, :estado, NOW(), 0, :nro_pedido, :imagen, :nombre_cliente)");
+            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedido (mesa_id, usuario_id, estado, fecha_creacion, precio_final, nro_pedido, imagen, nombre_cliente) 
+            VALUES (:mesa_id, :usuario_id, :estado, NOW(), 0, :nro_pedido, :imagen, :nombre_cliente)");
             $consulta->bindValue(':mesa_id', $this->mesa_id, PDO::PARAM_INT);
             $consulta->bindValue(':usuario_id', $this->usuario_id, PDO::PARAM_INT);
-            $consulta->bindValue(':producto_id', $this->producto_id, PDO::PARAM_INT);
+           // $consulta->bindValue(':producto_id', $this->producto_id, PDO::PARAM_INT);
             $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
             $consulta->bindValue('nro_pedido',$this->nro_pedido , PDO::PARAM_INT);
             $consulta->bindValue(':imagen', $imagenGuardar, PDO::PARAM_STR);
@@ -49,6 +49,21 @@ class Pedido
             return $objAccesoDatos->obtenerUltimoId();
         } catch (Exception $e) {
             return $e->getMessage();
+        }
+    }
+
+    public function AgregarProducto($idProducto){
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedido_producto (id_pedido,id_producto) 
+        VALUES (:id_pedido, :id_producto)");
+        $consulta->bindValue(':id_pedido', $this->id, PDO::PARAM_INT);
+        $consulta->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
+
+        try{
+            $consulta->execute();
+
+        }catch(Exception $e){
+            echo $e->getMessage();
         }
     }
 
@@ -91,25 +106,6 @@ class Pedido
             $consulta->bindValue(':fecha_finalizacion', date("Y-m-d H:i:s"), PDO::PARAM_STR);
             $consulta->bindValue(':id', $id, PDO::PARAM_INT);
             $consulta->execute();
-        }
-    }
-
-
-    public static function GetLoMasYMenosVendido($orderBy) {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("SELECT producto_id, COUNT(producto_id) AS cantidad 
-            FROM pedido WHERE estado != 'CANCELADO' 
-            GROUP BY producto_id 
-            ORDER BY cantidad " . $orderBy . " LIMIT 1");    
-            $consulta->execute();
-            $product = $consulta->fetchAll(PDO::FETCH_CLASS, "Pedido");
-            if (is_null($product)) {
-                throw new Exception("No existen pedidos");
-            }
-            return $product[0]->producto_id;
-        } catch (Exception $e) {
-            return $e->getMessage();
         }
     }
 
@@ -289,18 +285,6 @@ class Pedido
             $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedido SET precio_final = :precio_final WHERE nro_pedido = :nro_pedido");
             $consulta->bindValue(':nro_pedido', $nro_pedido, PDO::PARAM_INT);
             $consulta->bindValue(':precio_final', $precio_final, PDO::PARAM_STR);
-            $consulta->execute();
-            return $objAccesoDatos->obtenerUltimoId();
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
-    }
-
-    public static function DeletePedido($id) {
-        try {
-            $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("UPDATE pedido SET estado = 'CANCELADO' WHERE id = :id");
-            $consulta->bindValue(':id', $id, PDO::PARAM_INT);
             $consulta->execute();
             return $objAccesoDatos->obtenerUltimoId();
         } catch (Exception $e) {
