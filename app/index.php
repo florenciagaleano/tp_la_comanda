@@ -94,6 +94,7 @@ $app->group('/encuestas', function (RouteCollectorProxy $group) {
   $group->post('/crear', \EncuestaController::class . ':CrearEncuesta');
   $group->get('/writecsv', \EncuestaController::class . ':EndpointWriteCSV');
   $group->get('/readcsv', \EncuestaController::class . ':EndpointReadCSV');
+  $group->get('/pdf', \EncuestaController::class . ':EndpointCrearPDF');
 
 });
 

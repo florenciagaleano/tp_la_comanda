@@ -123,7 +123,7 @@ class EncuestaController {
     
 
 
-    public static function EndpointCreatePDF ($request, $response, $args) {
+    public static function EndpointCrearPDF ($request, $response, $args) {
         
         $pdf = new FPDF('P', 'mm', 'A3');
         $pdf->AddPage();
@@ -132,9 +132,8 @@ class EncuestaController {
         $pdf->Ln();
         $pdf->SetFont('Arial','B',10);
         $pdf->Cell(30,10,'ID');
-        $pdf->Cell(30,10,'ID Tabla');
-        $pdf->Cell(30,10,'Puntaje Tabla');
-        $pdf->Cell(30,10,'Puntaje Restaurante');
+        $pdf->Cell(30,10,'ID Mesa');
+        $pdf->Cell(30,10,'Puntaje Total');
         $pdf->Cell(30,10,'Puntaje Mozo');
         $pdf->Cell(30,10,'Puntaje Chef');
         $pdf->Cell(30,10,'Comentarios');
@@ -145,11 +144,10 @@ class EncuestaController {
 
         foreach ($arrayFile as $entity) {
             $pdf->Cell(30,10,$entity->id);
-            $pdf->Cell(30,10,$entity->id_table);
-            $pdf->Cell(30,10,$entity->score_table);
-            $pdf->Cell(30,10,$entity->score_restarnt);
-            $pdf->Cell(30,10,$entity->score_waiter);
-            $pdf->Cell(30,10,$entity->score_chef);
+            $pdf->Cell(30,10,$entity->id_mesa);
+            $pdf->Cell(30,10,$entity->puntaje_total);
+            $pdf->Cell(30,10,$entity->puntaje_mozo);
+            $pdf->Cell(30,10,$entity->puntaje_chef);
             $pdf->Cell(30,10,$entity->comentarios);
             $pdf->Ln();
         }
